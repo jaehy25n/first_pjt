@@ -34,3 +34,22 @@ class Holding(models.Model):
 
     def __str__(self):
         return f"{self.library.name} - {self.book.title} ({'대출가능' if self.loan_available else '대출불가'})"
+
+class LoanSignal(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='loan_signals')
+    scope = models.CharField(max_length=50)
+    value = models.FloatField()
+
+    def __str__(self):
+        return f"{self.book.title} - {self.scope}: {self.value}"
+
+class CoLoan(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='coloans_as_base')
+    co_book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='coloans_as_target')
+    score = models.FloatField()
+
+    class Meta:
+        unique_together = ('book', 'co_book')
+
+    def __str__(self):
+        return f"{self.book.title} -> {self.co_book.title} ({self.score})"
