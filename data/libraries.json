@@ -1,0 +1,98 @@
+[
+  {
+    "libCode": "111014",
+    "data": {
+      "response": {
+        "request": {
+          "libCode": "111014",
+          "pageNo": "",
+          "pageSize": "10",
+          "format": "json"
+        },
+        "numFound": 1,
+        "resultNum": 1,
+        "libs": [
+          {
+            "lib": {
+              "libCode": "111014",
+              "libName": "서울특별시교육청마포평생학습관",
+              "address": "서울특별시 마포구 홍익로2길 16",
+              "tel": "02-2137-0000",
+              "fax": "02-323-1057",
+              "latitude": "37.5543324",
+              "longitude": "126.924196",
+              "homepage": "http://mpllc.sen.go.kr/",
+              "closed": "매월 둘째주, 넷째주 월요일 / 법정공휴일, 휴관이 필요하다고 인정하는 날",
+              "operatingTime": "자료실 : 평일 9~18시(문헌정보실은 20시), 주말 9~17시 / 학습실 : 11월~2월은 8시~22시(평일, 주말) 3월~10월은 7시~22시(평일, 주말)",
+              "BookCount": "464717"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "libCode": "111086",
+    "data": {
+      "response": {
+        "request": {
+          "libCode": "111086",
+          "pageNo": "",
+          "pageSize": "10",
+          "format": "json"
+        },
+        "numFound": 1,
+        "resultNum": 1,
+        "libs": [
+          {
+            "lib": {
+              "libCode": "111086",
+              "libName": "마포서강도서관",
+              "address": "서울특별시 마포구 독막로 165",
+              "tel": "02-3141-7053",
+              "fax": "02-3141-7059",
+              "latitude": "37.5476833",
+              "longitude": "126.9320286",
+              "homepage": "https://mplib.mapo.go.kr/sglib/",
+              "closed": "매주 화요일 / 일요일을 제외한 법정공휴일, 도서관의 보수공사 등으로 부득이 휴관하여야 할 경우, 장서 점검 및 시설점검 등 운영상 부분적으로 휴실할 필요가 있는 경우, 기타 관장이 필요하다고 인정할 경우",
+              "operatingTime": "어린이자료실(평일/주말 : 09:00~18:00), 종합/디지털자료실(평일 09:00~22:00, 주말 09:00~20:00)",
+              "BookCount": "71451"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "libCode": "111257",
+    "data": {
+      "response": {
+        "request": {
+          "libCode": "111257",
+          "pageNo": "",
+          "pageSize": "10",
+          "format": "json"
+        },
+        "numFound": 1,
+        "resultNum": 1,
+        "libs": [
+          {
+            "lib": {
+              "libCode": "111257",
+              "libName": "해오름작은도서관",
+              "address": "서울특별시 마포구 신촌로26길 10, 2층",
+              "tel": "02-714-8080",
+              "fax": "-",
+              "latitude": "37.5558027",
+              "longitude": "126.9421554",
+              "homepage": "https://mplib.mapo.go.kr/libsmall/",
+              "closed": "매주 토요일, 일요일 / 법정공휴일",
+              "operatingTime": "월~금 9시~18시(점심 시간 13시~14시 이용 불가)",
+              "BookCount": "17236"
+            }
+          }
+        ]
+      }
+    }
+  }
+]
