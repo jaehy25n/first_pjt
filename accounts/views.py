@@ -39,3 +39,11 @@ class ProfileOnboardingView(APIView):
         
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
+
+class InterestListView(APIView):
+    def get(self, request):
+        interests = Interest.objects.all()
+        # You'll also need to import InterestSerializer from .serializers
+        from .serializers import InterestSerializer
+        serializer = InterestSerializer(interests, many=True)
+        return Response(serializer.data)
