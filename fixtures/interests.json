@@ -1,0 +1,10 @@
+[
+  {"model": "accounts.interest", "pk": 1, "fields": {"name": "문학·소설", "kdc_prefix": "8"}},
+  {"model": "accounts.interest", "pk": 2, "fields": {"name": "인문·철학", "kdc_prefix": "1"}},
+  {"model": "accounts.interest", "pk": 3, "fields": {"name": "종교", "kdc_prefix": "2"}},
+  {"model": "accounts.interest", "pk": 4, "fields": {"name": "사회·경제", "kdc_prefix": "3"}},
+  {"model": "accounts.interest", "pk": 5, "fields": {"name": "과학", "kdc_prefix": "4"}},
+  {"model": "accounts.interest", "pk": 6, "fields": {"name": "기술·공학", "kdc_prefix": "5"}},
+  {"model": "accounts.interest", "pk": 7, "fields": {"name": "예술·문화", "kdc_prefix": "6"}},
+  {"model": "accounts.interest", "pk": 8, "fields": {"name": "역사·지리", "kdc_prefix": "9"}}
+]
