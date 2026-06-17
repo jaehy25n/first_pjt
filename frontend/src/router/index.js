@@ -40,6 +40,11 @@ const routes = [
     path: '/books/:isbn13',
     name: 'book_detail',
     component: () => import('../views/BookDetailView.vue')
+  },
+  {
+    path: '/library',
+    name: 'library',
+    component: () => import('../views/LibraryView.vue')
   }
 ]
 
