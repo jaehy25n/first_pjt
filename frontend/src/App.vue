@@ -20,12 +20,18 @@
               <li class="nav-item">
                 <router-link to="/visit" class="nav-link px-3 rounded" active-class="active text-white bg-primary">방문모드</router-link>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" v-if="store.isLogin">
                 <router-link to="/profile" class="nav-link px-3 rounded" active-class="active text-white bg-primary">프로필</router-link>
               </li>
             </ul>
-            <div class="d-flex align-items-center mt-2 mt-md-0">
-              <router-link to="/login" class="btn btn-outline-primary px-4 rounded-pill">로그인</router-link>
+            <div class="d-flex align-items-center mt-2 mt-md-0 gap-2">
+              <template v-if="!store.isLogin">
+                <router-link to="/login" class="btn btn-outline-primary px-4 rounded-pill">로그인</router-link>
+                <router-link to="/signup" class="btn btn-primary px-4 rounded-pill shadow-sm">회원가입</router-link>
+              </template>
+              <template v-else>
+                <button @click="handleLogout" class="btn btn-outline-secondary px-4 rounded-pill">로그아웃</button>
+              </template>
             </div>
           </div>
         </div>
@@ -39,6 +45,13 @@
 </template>
 
 <script setup>
+import { useAccountStore } from '@/stores/accounts'
+
+const store = useAccountStore()
+
+const handleLogout = () => {
+  store.logOut()
+}
 </script>
 
 <style>
