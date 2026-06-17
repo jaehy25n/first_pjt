@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Prefetch, Q
 from .models import Library, Book, Holding
-from .serializers import LibrarySearchSerializer, BookCardSerializer
+from .serializers import LibrarySearchSerializer, BookCardSerializer, BookDetailSerializer, HoldingSerializer
 from accounts.models import Profile
 
 class LibraryListView(APIView):
@@ -56,3 +56,14 @@ class BookListView(ListAPIView):
             except Profile.DoesNotExist:
                 pass
         return context
+
+class BookDetailView(RetrieveAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookDetailSerializer
+    lookup_field = 'isbn13'
+
+class BookAvailabilityView(APIView):
+    def get(self, request, isbn13):
+        holdings = Holding.objects.filter(book__isbn13=isbn13).select_related('library')
+        serializer = HoldingSerializer(holdings, many=True)
+        return Response(serializer.data)
