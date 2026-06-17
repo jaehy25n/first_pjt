@@ -35,6 +35,11 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: ProfileView
+  },
+  {
+    path: '/books/:isbn13',
+    name: 'book_detail',
+    component: () => import('../views/BookDetailView.vue')
   }
 ]
 
