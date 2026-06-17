@@ -4,6 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .services import build_candidates
 from .llm import select_with_reasons
+from django.db.models import Prefetch
+from books.models import Library, Book, Holding
+from books.serializers import BookCardSerializer
 
 class RecommendationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -42,3 +45,25 @@ class RecommendationView(APIView):
             "run_id": None,
             "items": items
         })
+
+class LibraryVisitView(APIView):
+    def get(self, request):
+        lib_code = request.query_params.get('lib_code')
+        if not lib_code:
+            return Response({"detail": "lib_code 파라미터가 필요합니다."}, status=400)
+            
+        try:
+            library = Library.objects.get(lib_code=lib_code)
+        except Library.DoesNotExist:
+            return Response({"detail": "도서관을 찾을 수 없습니다."}, status=404)
+            
+        # 해당 도서관에 소장되어 있고(has_book) 지금 대출가능한(loan_available) 책 20권을 가져옴
+        books = Book.objects.filter(
+            holdings__library=library,
+            holdings__loan_available=True
+        ).prefetch_related(
+            Prefetch('holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
+        ).distinct()[:20]
+        
+        serializer = BookCardSerializer(books, many=True, context={'primary_library': library})
+        return Response(serializer.data)
