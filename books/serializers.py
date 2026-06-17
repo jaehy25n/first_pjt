@@ -38,3 +38,21 @@ class BookCardSerializer(serializers.ModelSerializer):
             "library_name": library.name,
             "status": status
         }
+
+class HoldingSerializer(serializers.ModelSerializer):
+    lib_code = serializers.CharField(source='library.lib_code', read_only=True)
+    library_name = serializers.CharField(source='library.name', read_only=True)
+
+    class Meta:
+        model = Holding
+        fields = ['lib_code', 'library_name', 'has_book', 'loan_available', 'snapshot_at']
+
+class BookDetailSerializer(serializers.ModelSerializer):
+    holdings = HoldingSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Book
+        fields = [
+            'isbn13', 'title', 'author', 'publisher', 'pub_year', 
+            'kdc_code', 'cover_url', 'description', 'page_count', 'holdings'
+        ]
