@@ -21,6 +21,9 @@
                 <router-link to="/visit" class="nav-link" active-class="active">방문모드</router-link>
               </li>
               <li class="nav-item" v-if="store.isLogin">
+                <router-link to="/library" class="nav-link" active-class="active">내 서재</router-link>
+              </li>
+              <li class="nav-item" v-if="store.isLogin">
                 <router-link to="/profile" class="nav-link" active-class="active">프로필</router-link>
               </li>
             </ul>
@@ -46,8 +49,24 @@
 
 <script setup>
 import { useAccountStore } from '@/stores/accounts'
+import { useLibraryStore } from '@/stores/library'
+import { onMounted, watch } from 'vue'
 
 const store = useAccountStore()
+const libraryStore = useLibraryStore()
+
+onMounted(() => {
+  if (store.isLogin) {
+    libraryStore.fetchLibrary()
+  }
+})
+
+// 로그인 상태 변경 시 서재 데이터 다시 로드
+watch(() => store.isLogin, (newVal) => {
+  if (newVal) {
+    libraryStore.fetchLibrary()
+  }
+})
 
 const handleLogout = () => {
   store.logOut()

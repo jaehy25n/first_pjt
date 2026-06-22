@@ -24,6 +24,36 @@
               <p class="mb-1"><strong>출판사:</strong> {{ book.publisher }}</p>
               <p class="mb-1"><strong>출판연도:</strong> {{ book.pub_year }}</p>
               <p class="mb-0"><strong>KDC:</strong> {{ book.kdc_code }}</p>
+
+              <div class="mt-3 d-flex gap-2" v-if="accountStore.isLogin">
+                <button 
+                  v-if="isReading"
+                  class="btn btn-primary disabled w-100"
+                >
+                  <i class="bi bi-book-fill me-1"></i> 읽는 중
+                </button>
+                <button 
+                  v-else
+                  @click="handleUpdateLog('reading')" 
+                  class="btn btn-outline-primary w-100"
+                >
+                  <i class="bi bi-book me-1"></i> 읽는 중
+                </button>
+
+                <button 
+                  v-if="isFinished"
+                  class="btn btn-success disabled w-100"
+                >
+                  <i class="bi bi-check-circle-fill me-1"></i> 완독
+                </button>
+                <button 
+                  v-else
+                  @click="handleUpdateLog('finished')" 
+                  class="btn btn-outline-success w-100"
+                >
+                  <i class="bi bi-check-circle me-1"></i> 완독
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -70,19 +100,43 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import axiosInstance from '@/api/axios'
+import { useAccountStore } from '@/stores/accounts'
+import { useLibraryStore } from '@/stores/library'
 
 const route = useRoute()
 const isbn13 = route.params.isbn13
+
+const accountStore = useAccountStore()
+const libraryStore = useLibraryStore()
 
 const book = ref(null)
 const availabilities = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
+const isReading = computed(() => {
+  return libraryStore.readingList.some(b => b.isbn13 === isbn13)
+})
+
+const isFinished = computed(() => {
+  return libraryStore.finishedList.some(b => b.isbn13 === isbn13)
+})
+
+const handleUpdateLog = async (status) => {
+  const statusName = status === 'reading' ? '읽는 중' : '완독'
+  if (confirm(`이 책을 '${statusName}' 상태로 표시할까요?`)) {
+    await libraryStore.updateLog(isbn13, status)
+    alert(`'${statusName}' 상태로 업데이트 되었습니다!`)
+  }
+}
+
 onMounted(async () => {
+  if (accountStore.isLogin && !libraryStore.isLoaded) {
+    libraryStore.fetchLibrary()
+  }
   try {
     // 도서 기본 상세 정보 및 가용성 동시 호출
     const [bookRes, availRes] = await Promise.all([
