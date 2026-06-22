@@ -1,0 +1,173 @@
+<template>
+  <div class="container py-4" style="max-width: 920px;">
+    <h3 class="fw-bold mb-1">취향 고르기</h3>
+    <p class="text-muted mb-4">
+      끌리는 책엔 <span class="text-primary fw-semibold">좋아요</span>, 안 맞으면
+      <span class="text-danger fw-semibold">별로</span>를 눌러주세요.
+      <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
+    </p>
+
+    <div v-if="loading" class="text-center my-5 text-muted">
+      <div class="spinner-border text-secondary" role="status"></div>
+      <p class="mt-2">책을 불러오는 중…</p>
+    </div>
+
+    <div v-else-if="books.length === 0" class="text-center my-5 text-muted">
+      <p>표시할 책이 없어요. 백엔드에서 <code>load_popularity</code>를 실행했는지 확인해주세요.</p>
+      <button class="btn btn-outline-secondary btn-sm" @click="reshuffle">다시 시도</button>
+    </div>
+
+    <div v-else>
+      <div class="row g-3">
+        <div v-for="book in books" :key="book.isbn13" class="col-6 col-md-4 col-lg-3">
+          <div class="card h-100 shadow-sm" :class="cardClass(book.isbn13)">
+            <img
+              :src="book.cover_url"
+              class="card-img-top cover"
+              :alt="book.title"
+              @error="onImgError"
+            />
+            <div class="card-body p-2 d-flex flex-column">
+              <span class="badge bg-light text-dark align-self-start mb-1">{{ book.kdc_label }}</span>
+              <p class="small fw-semibold mb-2 flex-grow-1 title-clamp">{{ book.title }}</p>
+              <div class="btn-group btn-group-sm w-100">
+                <button
+                  type="button"
+                  class="btn"
+                  :class="picks[book.isbn13] === 'like' ? 'btn-primary' : 'btn-outline-primary'"
+                  @click="toggle(book.isbn13, 'like')"
+                >👍 좋아요</button>
+                <button
+                  type="button"
+                  class="btn"
+                  :class="picks[book.isbn13] === 'dislike' ? 'btn-danger' : 'btn-outline-danger'"
+                  @click="toggle(book.isbn13, 'dislike')"
+                >👎 별로</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <button class="btn btn-link text-decoration-none" @click="reshuffle">🔄 다른 책 보기</button>
+        <small class="text-muted">좋아요 {{ likedCount }} · 별로 {{ dislikedCount }}</small>
+      </div>
+
+      <div class="mt-4">
+        <label class="form-label small fw-semibold">요즘 어떤 책이 읽고 싶나요? <span class="text-muted">(선택)</span></label>
+        <input
+          v-model="goal"
+          type="text"
+          class="form-control"
+          placeholder="예: 위로받고 싶어요 / 데이터 분석 입문"
+        />
+      </div>
+
+      <div class="d-grid mt-4">
+        <button
+          type="button"
+          class="btn btn-success btn-lg"
+          :disabled="submitting || (likedCount + dislikedCount === 0)"
+          @click="submit"
+        >
+          {{ submitting ? '저장 중…' : '시작하기' }}
+        </button>
+        <small v-if="likedCount + dislikedCount === 0" class="text-muted text-center mt-2">
+          한 권 이상 골라주세요.
+        </small>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axiosInstance from '@/api/axios'
+
+const router = useRouter()
+
+const books = ref([])
+const picks = ref({}) // isbn13 -> 'like' | 'dislike'
+const round = ref(0)
+const goal = ref('')
+const loading = ref(true)
+const submitting = ref(false)
+
+const likedCount = computed(
+  () => Object.values(picks.value).filter((v) => v === 'like').length
+)
+const dislikedCount = computed(
+  () => Object.values(picks.value).filter((v) => v === 'dislike').length
+)
+
+const fetchBooks = async () => {
+  loading.value = true
+  try {
+    const res = await axiosInstance.get('/api/onboarding/starter-books', {
+      params: { round: round.value },
+    })
+    books.value = res.data.books || []
+  } catch (e) {
+    console.error('스타터셋 불러오기 실패:', e)
+    books.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+const toggle = (isbn, sentiment) => {
+  if (picks.value[isbn] === sentiment) {
+    delete picks.value[isbn] // 같은 버튼 다시 누르면 해제
+  } else {
+    picks.value[isbn] = sentiment
+  }
+}
+
+const cardClass = (isbn) => {
+  if (picks.value[isbn] === 'like') return 'border-primary border-2'
+  if (picks.value[isbn] === 'dislike') return 'border-danger border-2 opacity-75'
+  return ''
+}
+
+const reshuffle = () => {
+  round.value += 1
+  fetchBooks()
+}
+
+const onImgError = (e) => {
+  e.target.style.visibility = 'hidden'
+}
+
+const submit = async () => {
+  submitting.value = true
+  const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
+  const disliked = Object.keys(picks.value).filter((i) => picks.value[i] === 'dislike')
+  const topics = goal.value.trim() ? [goal.value.trim()] : []
+  try {
+    await axiosInstance.post('/api/onboarding/taste', { liked, disliked, topics })
+    router.push({ name: 'home' })
+  } catch (e) {
+    console.error('취향 저장 실패:', e)
+    alert('저장에 실패했어요. 로그인 상태를 확인해주세요.')
+  } finally {
+    submitting.value = false
+  }
+}
+
+onMounted(fetchBooks)
+</script>
+
+<style scoped>
+.cover {
+  height: 200px;
+  object-fit: cover;
+}
+.title-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
