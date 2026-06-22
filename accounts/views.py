@@ -79,6 +79,7 @@ class LibraryLogView(APIView):
                 reading.append(card_data)
             elif log.status == 'finished':
                 card_data['rating'] = log.rating
+                card_data['finished_at'] = log.created.isoformat()
                 finished.append(card_data)
                 
         return Response({
