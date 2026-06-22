@@ -38,3 +38,20 @@ class ReadingLog(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title} ({self.status})"
+
+class BookPreference(models.Model):
+    """취향 신호(표지픽 좋아요/별로). 읽음 여부(ReadingLog)와 독립된 축."""
+    SENTIMENT_CHOICES = (
+        ('like', 'Like'),
+        ('dislike', 'Dislike'),
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='book_preferences')
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE, related_name='preferences')
+    sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'book')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.title} ({self.sentiment})"
