@@ -1,80 +1,113 @@
 from books.models import Book, Holding, CoLoan, LoanSignal
+from accounts.models import BookPreference, ReadingLog
+
+# 긍정 seed 가중치
+W_SEED = 3.0      # 선택/완독한 책 (즉시 맥락)
+W_LIKE = 2.0      # 표지픽 좋아요
+W_WISH = 1.0      # 찜 (약한 긍정)
+POP_BONUS = 0.02  # 인기 보충(작게)
+
 
 def build_candidates(user, seed_isbn13=None, limit=5):
-    """
-    미니스펙 Phase 4: 추천 후보 생성 함수 (데이터 기반)
-    LLM의 최종 limit 파라미터를 인자로 받지만, 이 함수 내부적으로는 30~50권의 후보를 생성하여 반환합니다.
+    """가중 다중 seed 후보 생성 (D19, 데이터만 · 외부 API 없음).
+
+    긍정 seed = seed_isbn13(선택/완독) + BookPreference 좋아요 + ReadingLog 찜.
+    부정 seed = BookPreference 별로 → 그 함께대출 이웃·동일 저자를 후보에서 제외.
+    이미 읽은 책(ReadingLog finished)·별로 책·seed 자신도 제외.
+    각 긍정 seed의 CoLoan 이웃에 (seed 가중치 × coloan score)를 누적해 점수화하고,
+    부족하면 관심사/전체 인기대출로 낮은 가중치 보충.
+    주 도서관 '지금 대출가능' 필터(없으면 소장으로 1단계 완화) 적용.
+    각 후보에 via_isbn13/via_title(어느 seed의 이웃인지)을 달아 R-2(이유 생성)가 근거로 쓰게 함.
     """
     candidate_limit = 50
-    
+
     try:
         primary_library = user.profile.primary_library
     except Exception:
         primary_library = None
-        
     if not primary_library:
         return []
 
-    def gather_candidates(require_loan_available=True):
-        candidates_dict = {}
-        
-        def add_candidate(book, signal_text):
-            if len(candidates_dict) >= candidate_limit:
-                return
-            if book.isbn13 not in candidates_dict:
-                # 사용자의 주 도서관 소장 여부 확인
-                holding = Holding.objects.filter(library=primary_library, book=book).first()
-                if holding and holding.has_book:
-                    if require_loan_available and not holding.loan_available:
-                        return
-                    candidates_dict[book.isbn13] = {
-                        "isbn13": book.isbn13,
-                        "title": book.title,
-                        "author": book.author,
-                        "kdc_code": book.kdc_code,
-                        "signal": signal_text,
-                        "library_name": primary_library.name
-                    }
+    # 1) 사용자 시드 수집
+    liked = list(BookPreference.objects.filter(user=user, sentiment='like').values_list('book_id', flat=True))
+    disliked = list(BookPreference.objects.filter(user=user, sentiment='dislike').values_list('book_id', flat=True))
+    wished = list(ReadingLog.objects.filter(user=user, status='wish').values_list('book_id', flat=True))
+    read = set(ReadingLog.objects.filter(user=user, status='finished').values_list('book_id', flat=True))
 
-        if seed_isbn13:
-            # 1. Seed 도서 기반 (함께대출 CoLoan)
-            coloans = CoLoan.objects.filter(book__isbn13=seed_isbn13).order_by('-score').select_related('co_book')
-            for col in coloans:
-                add_candidate(col.co_book, "선택하신 도서와 함께 많이 대출된 책입니다.")
-                
-            # 2. Seed 도서 기반 (같은 KDC 카테고리의 인기대출)
-            seed_book = Book.objects.filter(isbn13=seed_isbn13).first()
-            if seed_book and seed_book.kdc_code:
-                kdc_prefix = str(seed_book.kdc_code)[:1]
-                signals = LoanSignal.objects.filter(book__kdc_code__startswith=kdc_prefix).order_by('-value').select_related('book')
-                for sig in signals:
-                    add_candidate(sig.book, "비슷한 주제 분야의 인기 대출 도서입니다.")
-        else:
-            # 1. 관심사 기반 (프로필에 등록된 KDC 카테고리의 인기대출)
-            interests = user.profile.interests.all()
-            if interests.exists():
-                for interest in interests:
-                    signals = LoanSignal.objects.filter(book__kdc_code__startswith=interest.kdc_prefix).order_by('-value').select_related('book')
-                    for sig in signals:
-                        add_candidate(sig.book, f"관심사 '{interest.name}' 관련 인기 대출 도서입니다.")
-            
-        # 후보가 부족할 경우 (30권 미만), 도서관 전체 인기대출로 채우기
-        if len(candidates_dict) < 30:
-            signals = LoanSignal.objects.all().order_by('-value').select_related('book')
-            for sig in signals:
-                add_candidate(sig.book, "도서관 전체 인기 대출 도서입니다.")
-                
-        return list(candidates_dict.values())
+    positive = []  # [(isbn, weight)]
+    if seed_isbn13:
+        positive.append((seed_isbn13, W_SEED))
+    positive += [(i, W_LIKE) for i in liked]
+    positive += [(i, W_WISH) for i in wished]
 
-    # 1차 시도: '지금 대출가능' (loan_available=True) 인 도서만 필터링
-    candidate_list = gather_candidates(require_loan_available=True)
-    
-    # 2차 시도: 만약 가용 도서가 0권이라면 '소장 있음(대출중 포함)' 으로 한 단계 조건 완화
-    if len(candidate_list) == 0:
-        candidate_list = gather_candidates(require_loan_available=False)
-        
-    # 최종 리스트에 식별 번호(n) 부여 (1번부터 시작)
+    seed_titles = dict(
+        Book.objects.filter(isbn13__in=[s for s, _ in positive]).values_list('isbn13', 'title')
+    )
+
+    # 후보에서 제외할 책: 이미 읽음 + 별로 + 긍정 seed 자신
+    exclude = set(read) | set(disliked) | {s for s, _ in positive}
+
+    # 2) 부정 seed의 함께대출 이웃·동일 저자 → 제외 확장
+    if disliked:
+        exclude |= set(CoLoan.objects.filter(book_id__in=disliked).values_list('co_book_id', flat=True))
+        dis_authors = [a for a in Book.objects.filter(isbn13__in=disliked).values_list('author', flat=True) if a]
+        if dis_authors:
+            exclude |= set(Book.objects.filter(author__in=dis_authors).values_list('isbn13', flat=True))
+
+    # 3) 긍정 seed → CoLoan 이웃 점수 누적 (+ 출처 seed 기록)
+    scores = {}   # isbn -> 누적 점수
+    source = {}   # isbn -> (출처 seed isbn, 그 기여도)
+    for seed, weight in positive:
+        for co_book_id, score in CoLoan.objects.filter(book_id=seed).values_list('co_book_id', 'score'):
+            if co_book_id in exclude:
+                continue
+            contrib = weight * (score or 0.0)
+            scores[co_book_id] = scores.get(co_book_id, 0.0) + contrib
+            if contrib > source.get(co_book_id, (None, -1.0))[1]:
+                source[co_book_id] = (seed, contrib)
+
+    # 4) 부족하면 관심사 / 전체 인기대출로 보충 (낮은 가중)
+    interest_prefixes = [it.kdc_prefix for it in user.profile.interests.all() if it.kdc_prefix]
+    for book_id, kdc_code, value in LoanSignal.objects.filter(scope='popular').values_list('book_id', 'book__kdc_code', 'value'):
+        if book_id in exclude:
+            continue
+        bonus = POP_BONUS * (value or 0.0)
+        if interest_prefixes and (kdc_code or '')[:1] in interest_prefixes:
+            bonus += 0.5  # 관심사 분야 약간 가산
+        scores[book_id] = scores.get(book_id, 0.0) + bonus
+
+    # 5) 주 도서관 가용 필터 + 점수순 정렬
+    def assemble(require_loan_available):
+        out = []
+        for isbn, sc in sorted(scores.items(), key=lambda kv: kv[1], reverse=True):
+            if len(out) >= candidate_limit:
+                break
+            holding = Holding.objects.filter(library=primary_library, book_id=isbn).first()
+            if not (holding and holding.has_book):
+                continue
+            if require_loan_available and not holding.loan_available:
+                continue
+            book = Book.objects.filter(isbn13=isbn).first()
+            if not book:
+                continue
+            via_isbn = source.get(isbn, (None, 0.0))[0]
+            via_title = seed_titles.get(via_isbn)
+            out.append({
+                "isbn13": isbn,
+                "title": book.title,
+                "author": book.author,
+                "kdc_code": book.kdc_code,
+                "via_isbn13": via_isbn,
+                "via_title": via_title,
+                "signal": ("좋아한 '%s'와 함께 많이 빌린 책" % via_title) if via_title else "도서관 인기 대출 도서",
+                "library_name": primary_library.name,
+                "score": round(sc, 3),
+            })
+        return out
+
+    candidate_list = assemble(require_loan_available=True) or assemble(require_loan_available=False)
+
+    # 식별 번호(n) 부여 (R-2가 번호로 선별 → 환각 차단)
     for idx, cand in enumerate(candidate_list, 1):
         cand['n'] = idx
-        
     return candidate_list
