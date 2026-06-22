@@ -37,6 +37,11 @@ const routes = [
     component: ProfileView
   },
   {
+    path: '/onboarding',
+    name: 'onboarding',
+    component: () => import('../views/OnboardingView.vue')
+  },
+  {
     path: '/books/:isbn13',
     name: 'book_detail',
     component: () => import('../views/BookDetailView.vue')

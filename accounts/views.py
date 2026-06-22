@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .models import Profile, Interest, ReadingLog
-from books.models import Library, Book, Holding
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .models import Profile, Interest, ReadingLog, BookPreference
+from books.models import Library, Book, Holding, LoanSignal
 from .serializers import ProfileSerializer
 from books.serializers import BookCardSerializer
 from django.db.models import Prefetch
@@ -146,4 +146,133 @@ class LibraryToggleWishView(APIView):
         return Response({
             "isbn13": book.isbn13,
             "wished": wished
+        })
+
+
+KDC_LABELS = {
+    '0': '총류', '1': '철학', '2': '종교', '3': '사회과학', '4': '자연과학',
+    '5': '기술과학', '6': '예술', '7': '언어', '8': '문학', '9': '역사',
+}
+
+
+class StarterBooksView(APIView):
+    """온보딩 '표지픽'용 스타터셋.
+    인기대출(LoanSignal scope='popular') 중 대상 도서관 소장 + 표지 있는 책을
+    KDC 대분류(0~9)로 버킷팅해, 버킷별 인기순 1권씩 반환(주제 골고루).
+    ?round=N : reshuffle(버킷별 N번째, 0부터). 외부 API 없이 DB만 사용."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            round_idx = max(0, int(request.query_params.get('round', 0)))
+        except (TypeError, ValueError):
+            round_idx = 0
+
+        # 인기 점수 (scope='popular') — 먼저 `python manage.py load_popularity` 실행 필요
+        pop = dict(
+            LoanSignal.objects.filter(scope='popular')
+            .values_list('book_id', 'value')
+        )
+        if not pop:
+            return Response({
+                "round": round_idx, "count": 0, "books": [],
+                "hint": "인기 데이터가 없습니다. 먼저 `python manage.py load_popularity`를 실행하세요.",
+            })
+
+        # 대상 도서관에 소장(has_book=True)된 책
+        held = set(
+            Holding.objects.filter(has_book=True)
+            .values_list('book_id', flat=True)
+        )
+        eligible_ids = set(pop.keys()) & held
+
+        books = (
+            Book.objects
+            .filter(isbn13__in=eligible_ids)
+            .exclude(cover_url='')
+            .exclude(kdc_code='')
+        )
+
+        # KDC 대분류(첫 자리)로 버킷팅 → 버킷별 인기순 정렬
+        buckets = {}
+        for b in books:
+            digit = (b.kdc_code or '').strip()[:1]
+            if digit not in KDC_LABELS:
+                continue
+            buckets.setdefault(digit, []).append(b)
+        for digit in buckets:
+            buckets[digit].sort(key=lambda bk: pop.get(bk.isbn13, 0), reverse=True)
+
+        # round_idx 번째를 KDC 순서대로 한 권씩
+        result = []
+        for digit in sorted(buckets.keys()):
+            lst = buckets[digit]
+            if round_idx < len(lst):
+                b = lst[round_idx]
+                result.append({
+                    "isbn13": b.isbn13,
+                    "title": b.title,
+                    "author": b.author,
+                    "kdc_code": b.kdc_code,
+                    "kdc_label": KDC_LABELS[digit],
+                    "cover_url": b.cover_url,
+                })
+
+        return Response({"round": round_idx, "count": len(result), "books": result})
+
+
+class TasteOnboardingView(APIView):
+    """온보딩 '표지픽' 취향 저장 (D18 · 취향과 읽음 분리).
+        body: {liked:[isbn], disliked:[isbn], topics:[...]}
+    liked/disliked → BookPreference(취향 신호, 읽음 여부와 무관).
+    topics → Profile.reading_goal. (찜·읽음은 별도 — 내서재의 toggle-wish / 완독.) 로그인 필요."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        liked = request.data.get('liked') or []
+        disliked = request.data.get('disliked') or []
+        topics = request.data.get('topics') or []
+
+        # DB에 실제 존재하는 ISBN만 (오타/환각 차단)
+        def existing(isbns):
+            return list(
+                Book.objects.filter(isbn13__in=isbns).values_list('isbn13', flat=True)
+            )
+
+        valid_liked = existing(liked)
+        valid_disliked = existing(disliked)
+
+        created = updated = 0
+
+        def upsert(isbns, sentiment):
+            nonlocal created, updated
+            for isbn in isbns:
+                _, was_created = BookPreference.objects.update_or_create(
+                    user=user, book_id=isbn,
+                    defaults={'sentiment': sentiment},
+                )
+                created += 1 if was_created else 0
+                updated += 0 if was_created else 1
+
+        # 같은 책이 양쪽에 있으면 마지막(좋음)이 이김
+        upsert(valid_disliked, 'dislike')
+        upsert(valid_liked, 'like')
+
+        # topics → Profile.reading_goal (R 단계에서 KDC 매핑에 활용)
+        if topics:
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.reading_goal = ", ".join(
+                str(t).strip() for t in topics if str(t).strip()
+            )[:200]
+            profile.save(update_fields=['reading_goal'])
+
+        return Response({
+            "saved": {
+                "liked": len(valid_liked),
+                "disliked": len(valid_disliked),
+                "topics": len(topics),
+            },
+            "prefs_created": created,
+            "prefs_updated": updated,
         })
