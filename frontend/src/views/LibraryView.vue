@@ -31,6 +31,11 @@
             <i class="bi bi-check-circle-fill me-1"></i> 완독 ({{ libraryStore.finishedList.length }})
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold text-info" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab" aria-controls="stats" aria-selected="false">
+            <i class="bi bi-bar-chart-fill me-1"></i> 독서 통계
+          </button>
+        </li>
       </ul>
 
       <!-- 탭 콘텐츠 -->
@@ -82,17 +87,104 @@
           </div>
         </div>
 
+        <!-- 독서 통계 -->
+        <div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+          <div v-if="libraryStore.finishedList.length === 0" class="text-center my-5 text-muted">
+            <i class="bi bi-bar-chart fs-1 mb-3 d-block"></i>
+            <p>아직 통계를 낼 완독 데이터가 없습니다.</p>
+          </div>
+          <div v-else class="row g-4">
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-body">
+                  <h5 class="card-title fw-bold mb-4">월별 완독 권수</h5>
+                  <div style="height: 300px;">
+                    <Bar :data="chartDataMonthly" :options="chartOptions" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-body">
+                  <h5 class="card-title fw-bold mb-4">완독 주제(KDC) 분포</h5>
+                  <div style="height: 300px; display: flex; justify-content: center;">
+                    <Doughnut :data="chartDataKdc" :options="chartOptions" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useLibraryStore } from '@/stores/library'
 import BookCard from '@/components/BookCard.vue'
+import { Bar, Doughnut } from 'vue-chartjs'
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement } from 'chart.js'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
 const libraryStore = useLibraryStore()
+
+const kdcMap = {
+  '0': '총류', '1': '철학', '2': '종교', '3': '사회과학', '4': '자연과학',
+  '5': '기술과학', '6': '예술', '7': '언어', '8': '문학', '9': '역사'
+}
+
+const chartDataMonthly = computed(() => {
+  const counts = {}
+  libraryStore.finishedList.forEach(book => {
+    if (book.finished_at) {
+      const month = book.finished_at.substring(0, 7) // 'YYYY-MM'
+      counts[month] = (counts[month] || 0) + 1
+    }
+  })
+  
+  const labels = Object.keys(counts).sort()
+  const data = labels.map(l => counts[l])
+  
+  return {
+    labels: labels.length ? labels : ['이번 달'],
+    datasets: [{
+      label: '완독 권수',
+      backgroundColor: '#0d6efd',
+      data: data.length ? data : [0]
+    }]
+  }
+})
+
+const chartDataKdc = computed(() => {
+  const counts = {}
+  libraryStore.finishedList.forEach(book => {
+    const kdcCode = book.kdc_code ? String(book.kdc_code) : ''
+    const firstDigit = kdcCode.charAt(0)
+    const subject = kdcMap[firstDigit] || '기타'
+    counts[subject] = (counts[subject] || 0) + 1
+  })
+  
+  const labels = Object.keys(counts)
+  const data = Object.values(counts)
+  
+  return {
+    labels: labels.length ? labels : ['데이터 없음'],
+    datasets: [{
+      backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6f42c1', '#fd7e14', '#20c997', '#6c757d', '#e83e8c'],
+      data: data.length ? data : [1]
+    }]
+  }
+})
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false
+}
 
 onMounted(() => {
   // 컴포넌트 마운트 시 항상 최신 상태를 불러옴

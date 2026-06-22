@@ -51,5 +51,16 @@ export const useLibraryStore = defineStore('library', () => {
     return wishList.value.some(b => b.isbn13 === isbn13)
   }
 
-  return { wishList, readingList, finishedList, isLoading, isLoaded, fetchLibrary, toggleWish, checkIsWished }
+  const updateLog = async (isbn13, status) => {
+    try {
+      await axiosInstance.post('/api/library/log', { isbn13, status })
+      await fetchLibrary() // Update local lists
+      return true
+    } catch (e) {
+      console.error('기록 업데이트 실패:', e)
+      return false
+    }
+  }
+
+  return { wishList, readingList, finishedList, isLoading, isLoaded, fetchLibrary, toggleWish, checkIsWished, updateLog }
 })
