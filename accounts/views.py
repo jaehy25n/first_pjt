@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Profile, Interest, ReadingLog
+from .models import Profile, Interest, ReadingLog, BookPreference
 from books.models import Library, Book, Holding, LoanSignal
 from .serializers import ProfileSerializer
 from books.serializers import BookCardSerializer
@@ -219,3 +219,60 @@ class StarterBooksView(APIView):
                 })
 
         return Response({"round": round_idx, "count": len(result), "books": result})
+
+
+class TasteOnboardingView(APIView):
+    """온보딩 '표지픽' 취향 저장 (D18 · 취향과 읽음 분리).
+        body: {liked:[isbn], disliked:[isbn], topics:[...]}
+    liked/disliked → BookPreference(취향 신호, 읽음 여부와 무관).
+    topics → Profile.reading_goal. (찜·읽음은 별도 — 내서재의 toggle-wish / 완독.) 로그인 필요."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        liked = request.data.get('liked') or []
+        disliked = request.data.get('disliked') or []
+        topics = request.data.get('topics') or []
+
+        # DB에 실제 존재하는 ISBN만 (오타/환각 차단)
+        def existing(isbns):
+            return list(
+                Book.objects.filter(isbn13__in=isbns).values_list('isbn13', flat=True)
+            )
+
+        valid_liked = existing(liked)
+        valid_disliked = existing(disliked)
+
+        created = updated = 0
+
+        def upsert(isbns, sentiment):
+            nonlocal created, updated
+            for isbn in isbns:
+                _, was_created = BookPreference.objects.update_or_create(
+                    user=user, book_id=isbn,
+                    defaults={'sentiment': sentiment},
+                )
+                created += 1 if was_created else 0
+                updated += 0 if was_created else 1
+
+        # 같은 책이 양쪽에 있으면 마지막(좋음)이 이김
+        upsert(valid_disliked, 'dislike')
+        upsert(valid_liked, 'like')
+
+        # topics → Profile.reading_goal (R 단계에서 KDC 매핑에 활용)
+        if topics:
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.reading_goal = ", ".join(
+                str(t).strip() for t in topics if str(t).strip()
+            )[:200]
+            profile.save(update_fields=['reading_goal'])
+
+        return Response({
+            "saved": {
+                "liked": len(valid_liked),
+                "disliked": len(valid_disliked),
+                "topics": len(topics),
+            },
+            "prefs_created": created,
+            "prefs_updated": updated,
+        })
