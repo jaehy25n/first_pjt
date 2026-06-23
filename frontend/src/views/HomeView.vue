@@ -31,12 +31,16 @@
           <div v-for="item in recommendStore.recommendations" :key="item.isbn13" class="card mb-4 border-0 shadow-sm overflow-hidden">
             <div class="row g-0">
               <div class="col-md-3 bg-secondary bg-opacity-10 d-flex justify-content-center align-items-center p-3">
-                <img :src="item.cover_url || 'https://via.placeholder.com/150x200?text=No+Cover'" class="img-fluid rounded shadow" :alt="item.title" style="max-height: 250px; object-fit: cover;">
+                <router-link :to="`/books/${item.isbn13}`">
+                  <img :src="item.cover_url || 'https://via.placeholder.com/150x200?text=No+Cover'" class="img-fluid rounded shadow" :alt="item.title" style="max-height: 250px; object-fit: cover;">
+                </router-link>
               </div>
               <div class="col-md-9">
                 <div class="card-body h-100 d-flex flex-column p-4">
                   <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h4 class="card-title fw-bold mb-0">{{ item.title }}</h4>
+                    <h4 class="card-title fw-bold mb-0">
+                      <router-link :to="`/books/${item.isbn13}`" class="text-reset text-decoration-none">{{ item.title }}</router-link>
+                    </h4>
                     <span class="badge bg-success" v-if="item.availability?.status === 'available'">대출가능</span>
                     <span class="badge bg-warning text-dark" v-else-if="item.availability?.status === 'loaned'">대출중</span>
                     <span class="badge bg-secondary" v-else>미소장</span>
@@ -52,13 +56,13 @@
                   <div v-if="item.similar && item.similar.length > 0" class="mt-auto">
                     <p class="mb-2 text-muted small fw-bold">비슷한 책 (Read-alike)</p>
                     <div class="d-flex flex-wrap gap-3">
-                      <div v-for="sim in item.similar" :key="sim.isbn13" class="d-flex align-items-center bg-light rounded p-2 pe-3">
+                      <router-link v-for="sim in item.similar" :key="sim.isbn13" :to="`/books/${sim.isbn13}`" class="d-flex align-items-center bg-light rounded p-2 pe-3 text-reset text-decoration-none">
                         <img :src="sim.cover_url || 'https://via.placeholder.com/40x60?text=No'" class="rounded shadow-sm me-3" style="width: 40px; height: 60px; object-fit: cover;" :alt="sim.title">
                         <div class="small">
                           <div class="text-truncate fw-bold text-dark" style="max-width: 150px;" :title="sim.title">{{ sim.title }}</div>
                           <div class="text-muted text-truncate" style="max-width: 150px;"><small>{{ sim.author }}</small></div>
                         </div>
-                      </div>
+                      </router-link>
                     </div>
                   </div>
                 </div>
