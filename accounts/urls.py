@@ -9,5 +9,5 @@ urlpatterns = [
     path('onboarding/taste', views.TasteOnboardingView.as_view(), name='onboarding_taste'),
     path('library', views.LibraryLogView.as_view(), name='library_log'),
     path('library/log', views.LibraryLogCreateView.as_view(), name='library_log_create'),
-    path('library/toggle-wish', views.LibraryToggleWishView.as_view(), name='library_toggle_wish'),
+    path('library/toggle-like', views.LibraryToggleLikeView.as_view(), name='library_toggle_like'),
 ]
