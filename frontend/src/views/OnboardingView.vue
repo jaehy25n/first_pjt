@@ -6,6 +6,24 @@
       <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
     </p>
 
+    <div class="mb-4">
+      <label class="form-label small fw-semibold mb-2">
+        주로 이용할 도서관을 골라주세요
+        <span class="text-muted">(추천이 이 도서관에서 '지금 빌릴 수 있는' 책 기준으로 만들어져요)</span>
+      </label>
+      <div v-if="libraries.length === 0" class="text-muted small">도서관 목록을 불러오는 중…</div>
+      <div v-else class="d-flex flex-wrap gap-2">
+        <button
+          v-for="lib in libraries"
+          :key="lib.lib_code"
+          type="button"
+          class="btn btn-sm"
+          :class="selectedLib === lib.lib_code ? 'btn-primary' : 'btn-outline-primary'"
+          @click="selectedLib = lib.lib_code"
+        >{{ lib.name }}</button>
+      </div>
+    </div>
+
     <div v-if="loading" class="text-center my-5 text-muted">
       <div class="spinner-border text-secondary" role="status"></div>
       <p class="mt-2">책을 불러오는 중…</p>
@@ -59,13 +77,13 @@
         <button
           type="button"
           class="btn btn-success btn-lg"
-          :disabled="submitting || likedCount === 0"
+          :disabled="submitting || likedCount === 0 || !selectedLib"
           @click="submit"
         >
           {{ submitting ? '저장 중…' : '시작하기' }}
         </button>
-        <small v-if="likedCount === 0" class="text-muted text-center mt-2">
-          한 권 이상 골라주세요.
+        <small v-if="likedCount === 0 || !selectedLib" class="text-muted text-center mt-2">
+          {{ !selectedLib ? '주 도서관을 골라주세요.' : '한 권 이상 골라주세요.' }}
         </small>
       </div>
     </div>
@@ -85,6 +103,8 @@ const round = ref(0)
 const goal = ref('')
 const loading = ref(true)
 const submitting = ref(false)
+const libraries = ref([])
+const selectedLib = ref(null) // lib_code
 
 const likedCount = computed(
   () => Object.values(picks.value).filter((v) => v === 'like').length
@@ -102,6 +122,16 @@ const fetchBooks = async () => {
     books.value = []
   } finally {
     loading.value = false
+  }
+}
+
+const fetchLibraries = async () => {
+  try {
+    const res = await axiosInstance.get('/api/libraries/')
+    libraries.value = res.data || []
+  } catch (e) {
+    console.error('도서관 목록 불러오기 실패:', e)
+    libraries.value = []
   }
 }
 
@@ -132,6 +162,10 @@ const submit = async () => {
   const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
   const topics = goal.value.trim() ? [goal.value.trim()] : []
   try {
+    // 주 도서관 먼저 저장(추천이 이 도서관 기준) → 취향 저장
+    if (selectedLib.value) {
+      await axiosInstance.patch('/api/profile/onboarding/', { primary_library_code: selectedLib.value })
+    }
     await axiosInstance.post('/api/onboarding/taste', { liked, topics })
     router.push({ name: 'home' })
   } catch (e) {
@@ -142,7 +176,10 @@ const submit = async () => {
   }
 }
 
-onMounted(fetchBooks)
+onMounted(() => {
+  fetchBooks()
+  fetchLibraries()
+})
 </script>
 
 <style scoped>
