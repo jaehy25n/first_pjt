@@ -31,28 +31,27 @@ class BookListView(ListAPIView):
         if q:
             queryset = queryset.filter(Q(title__icontains=q) | Q(author__icontains=q))
 
-        # Prefetch holdings for the user's primary library
+        # 선택 도서관들(union) 소장 prefetch (D29)
         if self.request.user.is_authenticated:
             try:
-                profile = self.request.user.profile
-                library = profile.primary_library
-                if library:
+                libraries = list(self.request.user.profile.libraries.all())
+                if libraries:
                     holding_prefetch = Prefetch(
                         'holdings',
-                        queryset=Holding.objects.filter(library=library),
+                        queryset=Holding.objects.filter(library__in=libraries).select_related('library'),
                         to_attr='user_holding'
                     )
                     queryset = queryset.prefetch_related(holding_prefetch)
             except Profile.DoesNotExist:
                 pass
-                
+
         return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request.user.is_authenticated:
             try:
-                context['primary_library'] = self.request.user.profile.primary_library
+                context['libraries'] = list(self.request.user.profile.libraries.all())
             except Profile.DoesNotExist:
                 pass
         return context
