@@ -14,8 +14,9 @@ class PrimaryLibrarySerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     primary_library = PrimaryLibrarySerializer(read_only=True)
+    libraries = PrimaryLibrarySerializer(many=True, read_only=True)
     interests = InterestSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
-        fields = ['reading_goal', 'primary_library', 'interests']
+        fields = ['reading_goal', 'primary_library', 'libraries', 'interests']

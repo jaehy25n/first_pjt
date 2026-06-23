@@ -22,21 +22,28 @@ class ProfileOnboardingView(APIView):
         profile, created = Profile.objects.get_or_create(user=request.user)
         
         interest_ids = request.data.get('interest_ids')
-        primary_library_code = request.data.get('primary_library_code')
-        
+        library_codes = request.data.get('library_codes')              # 다중 선택 (D29)
+        primary_library_code = request.data.get('primary_library_code')  # 하위호환(단일)
+
         if interest_ids is not None:
             interests = Interest.objects.filter(id__in=interest_ids)
             profile.interests.set(interests)
-            
-        if primary_library_code is not None:
+
+        if library_codes is not None:
+            # 입력 순서 유지하며 libraries(M2M) 세팅 + 대표 = 첫째
+            libs_by_code = {l.lib_code: l for l in Library.objects.filter(lib_code__in=library_codes)}
+            ordered = [libs_by_code[c] for c in library_codes if c in libs_by_code]
+            profile.libraries.set(ordered)
+            profile.primary_library = ordered[0] if ordered else None
+        elif primary_library_code is not None:
             try:
                 library = Library.objects.get(lib_code=primary_library_code)
                 profile.primary_library = library
+                profile.libraries.add(library)
             except Library.DoesNotExist:
-                # If the library doesn't exist, we can ignore or return 400. 
-                # For robustness, we just ignore invalid codes in this MVP.
+                # MVP: 잘못된 코드는 무시
                 pass
-                
+
         profile.save()
         
         serializer = ProfileSerializer(profile)
@@ -56,19 +63,20 @@ class LibraryLogView(APIView):
     def get(self, request):
         logs = ReadingLog.objects.filter(user=request.user).select_related('book')
         
+        # 선택 도서관들(union) 기준 가용성 (D29)
         try:
-            library = request.user.profile.primary_library
+            libraries = list(request.user.profile.libraries.all())
         except Exception:
-            library = None
-            
-        if library:
-            prefetch = Prefetch('book__holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
+            libraries = []
+
+        if libraries:
+            prefetch = Prefetch('book__holdings', queryset=Holding.objects.filter(library__in=libraries).select_related('library'), to_attr='user_holding')
             logs = logs.prefetch_related(prefetch)
-            
+
         reading = []
         finished = []
 
-        context = {'primary_library': library}
+        context = {'libraries': libraries}
 
         for log in logs:
             card_data = BookCardSerializer(log.book, context=context).data
@@ -81,9 +89,9 @@ class LibraryLogView(APIView):
 
         # 좋아요(=구 찜) 묶음은 BookPreference(like)에서 (D28)
         like_prefs = BookPreference.objects.filter(user=request.user, sentiment='like').select_related('book')
-        if library:
+        if libraries:
             like_prefs = like_prefs.prefetch_related(
-                Prefetch('book__holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
+                Prefetch('book__holdings', queryset=Holding.objects.filter(library__in=libraries).select_related('library'), to_attr='user_holding')
             )
         liked = [BookCardSerializer(p.book, context=context).data for p in like_prefs]
 

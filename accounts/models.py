@@ -16,7 +16,9 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reading_goal = models.CharField(max_length=200, blank=True)
     interests = models.ManyToManyField(Interest, related_name='profiles', blank=True)
+    # 대표 도서관(고른 것 중 첫째 — 단일표시 호환용). 추천/가용성은 libraries(M2M) union 사용 (D29)
     primary_library = models.ForeignKey('books.Library', on_delete=models.SET_NULL, null=True, blank=True)
+    libraries = models.ManyToManyField('books.Library', related_name='member_profiles', blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
