@@ -15,27 +15,29 @@ class BookCardSerializer(serializers.ModelSerializer):
         fields = ['isbn13', 'title', 'author', 'kdc_code', 'cover_url', 'availability']
 
     def get_availability(self, obj):
-        # We assume primary_library is passed in context to avoid N+1 profile queries
-        library = self.context.get('primary_library')
-        if not library:
+        # 선택 도서관들(union) 기준. 단일 primary_library만 줘도 하위호환 (D29)
+        libraries = self.context.get('libraries')
+        if not libraries:
+            single = self.context.get('primary_library')
+            libraries = [single] if single else []
+        if not libraries:
             return None
-            
-        # We assume holdings are prefetched to 'user_holding'
+
+        # holdings는 user_holding으로 prefetch됨(선택 도서관들로 필터·select_related('library'))
         user_holdings = getattr(obj, 'user_holding', [])
-        if not user_holdings:
-            status = 'none'
+        owned = [h for h in user_holdings if h.has_book]
+        available = [h for h in owned if h.loan_available]
+
+        if available:
+            status, chosen = 'available', available[0].library  # 빌릴 수 있는 곳 우선
+        elif owned:
+            status, chosen = 'loaned', owned[0].library
         else:
-            holding = user_holdings[0]
-            if not holding.has_book:
-                status = 'none'
-            elif holding.loan_available:
-                status = 'available'
-            else:
-                status = 'loaned'
-                
+            status, chosen = 'none', libraries[0]
+
         return {
-            "lib_code": library.lib_code,
-            "library_name": library.name,
+            "lib_code": chosen.lib_code,
+            "library_name": chosen.name,
             "status": status
         }
 

@@ -8,8 +8,8 @@
 
     <div class="mb-4">
       <label class="form-label small fw-semibold mb-2">
-        주로 이용할 도서관을 골라주세요
-        <span class="text-muted">(추천이 이 도서관에서 '지금 빌릴 수 있는' 책 기준으로 만들어져요)</span>
+        이용할 도서관을 골라주세요 <span class="text-secondary">(여러 곳 선택 가능)</span>
+        <span class="text-muted">— 추천이 고른 도서관들에서 '지금 빌릴 수 있는' 책 기준으로 만들어져요</span>
       </label>
       <div v-if="libraries.length === 0" class="text-muted small">도서관 목록을 불러오는 중…</div>
       <div v-else class="d-flex flex-wrap gap-2">
@@ -18,8 +18,8 @@
           :key="lib.lib_code"
           type="button"
           class="btn btn-sm"
-          :class="selectedLib === lib.lib_code ? 'btn-primary' : 'btn-outline-primary'"
-          @click="selectedLib = lib.lib_code"
+          :class="selectedLibs.includes(lib.lib_code) ? 'btn-primary' : 'btn-outline-primary'"
+          @click="toggleLib(lib.lib_code)"
         >{{ lib.name }}</button>
       </div>
     </div>
@@ -77,13 +77,13 @@
         <button
           type="button"
           class="btn btn-success btn-lg"
-          :disabled="submitting || likedCount === 0 || !selectedLib"
+          :disabled="submitting || likedCount === 0 || selectedLibs.length === 0"
           @click="submit"
         >
           {{ submitting ? '저장 중…' : '시작하기' }}
         </button>
-        <small v-if="likedCount === 0 || !selectedLib" class="text-muted text-center mt-2">
-          {{ !selectedLib ? '주 도서관을 골라주세요.' : '한 권 이상 골라주세요.' }}
+        <small v-if="likedCount === 0 || selectedLibs.length === 0" class="text-muted text-center mt-2">
+          {{ selectedLibs.length === 0 ? '도서관을 한 곳 이상 골라주세요.' : '한 권 이상 골라주세요.' }}
         </small>
       </div>
     </div>
@@ -104,7 +104,7 @@ const goal = ref('')
 const loading = ref(true)
 const submitting = ref(false)
 const libraries = ref([])
-const selectedLib = ref(null) // lib_code
+const selectedLibs = ref([]) // lib_code 배열 (다중 선택)
 
 const likedCount = computed(
   () => Object.values(picks.value).filter((v) => v === 'like').length
@@ -135,6 +135,12 @@ const fetchLibraries = async () => {
   }
 }
 
+const toggleLib = (code) => {
+  const i = selectedLibs.value.indexOf(code)
+  if (i === -1) selectedLibs.value.push(code)
+  else selectedLibs.value.splice(i, 1)
+}
+
 const toggle = (isbn, sentiment) => {
   if (picks.value[isbn] === sentiment) {
     delete picks.value[isbn] // 같은 버튼 다시 누르면 해제
@@ -162,9 +168,9 @@ const submit = async () => {
   const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
   const topics = goal.value.trim() ? [goal.value.trim()] : []
   try {
-    // 주 도서관 먼저 저장(추천이 이 도서관 기준) → 취향 저장
-    if (selectedLib.value) {
-      await axiosInstance.patch('/api/profile/onboarding/', { primary_library_code: selectedLib.value })
+    // 선택 도서관들 먼저 저장(추천이 이 도서관들 기준) → 취향 저장
+    if (selectedLibs.value.length > 0) {
+      await axiosInstance.patch('/api/profile/onboarding/', { library_codes: selectedLibs.value })
     }
     await axiosInstance.post('/api/onboarding/taste', { liked, topics })
     router.push({ name: 'home' })
