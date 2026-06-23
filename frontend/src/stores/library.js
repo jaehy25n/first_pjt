@@ -4,7 +4,7 @@ import axiosInstance from '@/api/axios'
 import { useAccountStore } from './accounts'
 
 export const useLibraryStore = defineStore('library', () => {
-  const wishList = ref([])
+  const likedList = ref([])
   const readingList = ref([])
   const finishedList = ref([])
   const isLoading = ref(false)
@@ -17,7 +17,7 @@ export const useLibraryStore = defineStore('library', () => {
     isLoading.value = true
     try {
       const res = await axiosInstance.get('/api/library')
-      wishList.value = res.data.wish || []
+      likedList.value = res.data.liked || []
       readingList.value = res.data.reading || []
       finishedList.value = res.data.finished || []
       isLoaded.value = true
@@ -28,27 +28,27 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  const toggleWish = async (isbn13, bookObj = null) => {
+  const toggleLike = async (isbn13, bookObj = null) => {
     try {
       const res = await axiosInstance.post('/api/library/toggle-wish', { isbn13 })
-      const isWished = res.data.wished
-      
-      if (isWished) {
-        if (!wishList.value.some(b => b.isbn13 === isbn13)) {
-          if (bookObj) wishList.value.unshift(bookObj)
+      const isLiked = res.data.liked
+
+      if (isLiked) {
+        if (!likedList.value.some(b => b.isbn13 === isbn13)) {
+          if (bookObj) likedList.value.unshift(bookObj)
         }
       } else {
-        wishList.value = wishList.value.filter(b => b.isbn13 !== isbn13)
+        likedList.value = likedList.value.filter(b => b.isbn13 !== isbn13)
       }
-      return isWished
+      return isLiked
     } catch (e) {
-      console.error('찜 토글 실패:', e)
+      console.error('좋아요 토글 실패:', e)
       return null
     }
   }
-  
-  const checkIsWished = (isbn13) => {
-    return wishList.value.some(b => b.isbn13 === isbn13)
+
+  const checkIsLiked = (isbn13) => {
+    return likedList.value.some(b => b.isbn13 === isbn13)
   }
 
   const updateLog = async (isbn13, status) => {
@@ -62,5 +62,5 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  return { wishList, readingList, finishedList, isLoading, isLoaded, fetchLibrary, toggleWish, checkIsWished, updateLog }
+  return { likedList, readingList, finishedList, isLoading, isLoaded, fetchLibrary, toggleLike, checkIsLiked, updateLog }
 })

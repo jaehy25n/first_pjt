@@ -85,10 +85,10 @@ class LibraryLogView(APIView):
             like_prefs = like_prefs.prefetch_related(
                 Prefetch('book__holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
             )
-        wish = [BookCardSerializer(p.book, context=context).data for p in like_prefs]
+        liked = [BookCardSerializer(p.book, context=context).data for p in like_prefs]
 
         return Response({
-            "wish": wish,
+            "liked": liked,
             "reading": reading,
             "finished": finished
         })
@@ -142,16 +142,16 @@ class LibraryToggleWishView(APIView):
         pref = BookPreference.objects.filter(user=request.user, book=book).first()
         if pref and pref.sentiment == 'like':
             pref.delete()
-            wished = False
+            liked = False
         else:
             BookPreference.objects.update_or_create(
                 user=request.user, book=book, defaults={'sentiment': 'like'}
             )
-            wished = True
+            liked = True
 
         return Response({
             "isbn13": book.isbn13,
-            "wished": wished
+            "liked": liked
         })
 
 

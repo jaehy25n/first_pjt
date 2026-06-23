@@ -17,8 +17,8 @@
       <!-- 탭 네비게이션 -->
       <ul class="nav nav-tabs mb-4" id="libraryTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active fw-bold text-danger" id="wish-tab" data-bs-toggle="tab" data-bs-target="#wish" type="button" role="tab" aria-controls="wish" aria-selected="true">
-            <i class="bi bi-heart-fill me-1"></i> 찜한 책 ({{ libraryStore.wishList.length }})
+          <button class="nav-link active fw-bold text-danger" id="liked-tab" data-bs-toggle="tab" data-bs-target="#liked" type="button" role="tab" aria-controls="liked" aria-selected="true">
+            <i class="bi bi-heart-fill me-1"></i> 좋아요 ({{ libraryStore.likedList.length }})
           </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -41,15 +41,15 @@
       <!-- 탭 콘텐츠 -->
       <div class="tab-content" id="libraryTabsContent">
         
-        <!-- 찜한 책 -->
-        <div class="tab-pane fade show active" id="wish" role="tabpanel" aria-labelledby="wish-tab">
-          <div v-if="libraryStore.wishList.length === 0" class="text-center my-5 text-muted">
+        <!-- 좋아요 -->
+        <div class="tab-pane fade show active" id="liked" role="tabpanel" aria-labelledby="liked-tab">
+          <div v-if="libraryStore.likedList.length === 0" class="text-center my-5 text-muted">
             <i class="bi bi-heart fs-1 mb-3 d-block"></i>
-            <p>아직 찜한 책이 없습니다.</p>
+            <p>아직 좋아요한 책이 없습니다.</p>
             <router-link to="/search" class="btn btn-outline-primary mt-2">책 탐색하기</router-link>
           </div>
           <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            <div class="col" v-for="book in libraryStore.wishList" :key="book.isbn13">
+            <div class="col" v-for="book in libraryStore.likedList" :key="book.isbn13">
               <BookCard :book="book" />
             </div>
           </div>
