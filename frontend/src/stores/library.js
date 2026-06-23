@@ -30,7 +30,7 @@ export const useLibraryStore = defineStore('library', () => {
 
   const toggleLike = async (isbn13, bookObj = null) => {
     try {
-      const res = await axiosInstance.post('/api/library/toggle-wish', { isbn13 })
+      const res = await axiosInstance.post('/api/library/toggle-like', { isbn13 })
       const isLiked = res.data.liked
 
       if (isLiked) {
