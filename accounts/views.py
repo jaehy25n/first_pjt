@@ -65,23 +65,28 @@ class LibraryLogView(APIView):
             prefetch = Prefetch('book__holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
             logs = logs.prefetch_related(prefetch)
             
-        wish = []
         reading = []
         finished = []
-        
+
         context = {'primary_library': library}
-        
+
         for log in logs:
             card_data = BookCardSerializer(log.book, context=context).data
-            if log.status == 'wish':
-                wish.append(card_data)
-            elif log.status == 'reading':
+            if log.status == 'reading':
                 reading.append(card_data)
             elif log.status == 'finished':
                 card_data['rating'] = log.rating
                 card_data['finished_at'] = log.created.isoformat()
                 finished.append(card_data)
-                
+
+        # 좋아요(=구 찜) 묶음은 BookPreference(like)에서 (D28)
+        like_prefs = BookPreference.objects.filter(user=request.user, sentiment='like').select_related('book')
+        if library:
+            like_prefs = like_prefs.prefetch_related(
+                Prefetch('book__holdings', queryset=Holding.objects.filter(library=library), to_attr='user_holding')
+            )
+        wish = [BookCardSerializer(p.book, context=context).data for p in like_prefs]
+
         return Response({
             "wish": wish,
             "reading": reading,
@@ -133,20 +138,17 @@ class LibraryToggleWishView(APIView):
         except Book.DoesNotExist:
             return Response({"detail": "Book not found"}, status=404)
             
-        log = ReadingLog.objects.filter(user=request.user, book=book).first()
-        
-        if log:
-            if log.status == 'wish':
-                log.delete()
-                wished = False
-            else:
-                log.status = 'wish'
-                log.save()
-                wished = True
+        # 좋아요 토글 = BookPreference(like). 찜→좋아요 통합 (D28)
+        pref = BookPreference.objects.filter(user=request.user, book=book).first()
+        if pref and pref.sentiment == 'like':
+            pref.delete()
+            wished = False
         else:
-            ReadingLog.objects.create(user=request.user, book=book, status='wish')
+            BookPreference.objects.update_or_create(
+                user=request.user, book=book, defaults={'sentiment': 'like'}
+            )
             wished = True
-            
+
         return Response({
             "isbn13": book.isbn13,
             "wished": wished
