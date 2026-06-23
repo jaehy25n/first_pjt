@@ -29,16 +29,15 @@ def build_candidates(user, seed_isbn13=None, limit=5):
         return []
 
     # 1) 사용자 시드 수집
+    # 좋아요=긍정 seed. 찜(wish)은 좋아요로 통합됨 → 별도 분기 제거 (D28)
     liked = list(BookPreference.objects.filter(user=user, sentiment='like').values_list('book_id', flat=True))
     disliked = list(BookPreference.objects.filter(user=user, sentiment='dislike').values_list('book_id', flat=True))
-    wished = list(ReadingLog.objects.filter(user=user, status='wish').values_list('book_id', flat=True))
     read = set(ReadingLog.objects.filter(user=user, status='finished').values_list('book_id', flat=True))
 
     positive = []  # [(isbn, weight)]
     if seed_isbn13:
         positive.append((seed_isbn13, W_SEED))
     positive += [(i, W_LIKE) for i in liked]
-    positive += [(i, W_WISH) for i in wished]
 
     seed_titles = dict(
         Book.objects.filter(isbn13__in=[s for s, _ in positive]).values_list('isbn13', 'title')
