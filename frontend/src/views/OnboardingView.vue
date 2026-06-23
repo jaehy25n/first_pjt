@@ -2,8 +2,7 @@
   <div class="container py-4" style="max-width: 920px;">
     <h3 class="fw-bold mb-1">취향 고르기</h3>
     <p class="text-muted mb-4">
-      끌리는 책엔 <span class="text-primary fw-semibold">좋아요</span>, 안 맞으면
-      <span class="text-danger fw-semibold">별로</span>를 눌러주세요.
+      끌리는 책에 <span class="text-primary fw-semibold">좋아요</span>를 눌러주세요.
       <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
     </p>
 
@@ -30,20 +29,12 @@
             <div class="card-body p-2 d-flex flex-column">
               <span class="badge bg-light text-dark align-self-start mb-1">{{ book.kdc_label }}</span>
               <p class="small fw-semibold mb-2 flex-grow-1 title-clamp">{{ book.title }}</p>
-              <div class="btn-group btn-group-sm w-100">
-                <button
-                  type="button"
-                  class="btn"
-                  :class="picks[book.isbn13] === 'like' ? 'btn-primary' : 'btn-outline-primary'"
-                  @click="toggle(book.isbn13, 'like')"
-                >👍 좋아요</button>
-                <button
-                  type="button"
-                  class="btn"
-                  :class="picks[book.isbn13] === 'dislike' ? 'btn-danger' : 'btn-outline-danger'"
-                  @click="toggle(book.isbn13, 'dislike')"
-                >👎 별로</button>
-              </div>
+              <button
+                type="button"
+                class="btn btn-sm w-100"
+                :class="picks[book.isbn13] === 'like' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="toggle(book.isbn13, 'like')"
+              >{{ picks[book.isbn13] === 'like' ? '👍 좋아요 ✓' : '👍 좋아요' }}</button>
             </div>
           </div>
         </div>
@@ -51,7 +42,7 @@
 
       <div class="d-flex justify-content-between align-items-center mt-3">
         <button class="btn btn-link text-decoration-none" @click="reshuffle">🔄 다른 책 보기</button>
-        <small class="text-muted">좋아요 {{ likedCount }} · 별로 {{ dislikedCount }}</small>
+        <small class="text-muted">좋아요 {{ likedCount }}</small>
       </div>
 
       <div class="mt-4">
@@ -68,12 +59,12 @@
         <button
           type="button"
           class="btn btn-success btn-lg"
-          :disabled="submitting || (likedCount + dislikedCount === 0)"
+          :disabled="submitting || likedCount === 0"
           @click="submit"
         >
           {{ submitting ? '저장 중…' : '시작하기' }}
         </button>
-        <small v-if="likedCount + dislikedCount === 0" class="text-muted text-center mt-2">
+        <small v-if="likedCount === 0" class="text-muted text-center mt-2">
           한 권 이상 골라주세요.
         </small>
       </div>
@@ -89,7 +80,7 @@ import axiosInstance from '@/api/axios'
 const router = useRouter()
 
 const books = ref([])
-const picks = ref({}) // isbn13 -> 'like' | 'dislike'
+const picks = ref({}) // isbn13 -> 'like'
 const round = ref(0)
 const goal = ref('')
 const loading = ref(true)
@@ -97,9 +88,6 @@ const submitting = ref(false)
 
 const likedCount = computed(
   () => Object.values(picks.value).filter((v) => v === 'like').length
-)
-const dislikedCount = computed(
-  () => Object.values(picks.value).filter((v) => v === 'dislike').length
 )
 
 const fetchBooks = async () => {
@@ -127,7 +115,6 @@ const toggle = (isbn, sentiment) => {
 
 const cardClass = (isbn) => {
   if (picks.value[isbn] === 'like') return 'border-primary border-2'
-  if (picks.value[isbn] === 'dislike') return 'border-danger border-2 opacity-75'
   return ''
 }
 
@@ -143,10 +130,9 @@ const onImgError = (e) => {
 const submit = async () => {
   submitting.value = true
   const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
-  const disliked = Object.keys(picks.value).filter((i) => picks.value[i] === 'dislike')
   const topics = goal.value.trim() ? [goal.value.trim()] : []
   try {
-    await axiosInstance.post('/api/onboarding/taste', { liked, disliked, topics })
+    await axiosInstance.post('/api/onboarding/taste', { liked, topics })
     router.push({ name: 'home' })
   } catch (e) {
     console.error('취향 저장 실패:', e)
