@@ -25,34 +25,19 @@
               <p class="mb-1"><strong>출판연도:</strong> {{ book.pub_year }}</p>
               <p class="mb-0"><strong>KDC:</strong> {{ book.kdc_code }}</p>
 
-              <div class="mt-3 d-flex gap-2" v-if="accountStore.isLogin">
-                <button 
-                  v-if="isReading"
-                  class="btn btn-primary disabled w-100"
+              <div class="mt-3" v-if="accountStore.isLogin">
+                <button
+                  type="button"
+                  class="btn w-100"
+                  :class="statusBtn.cls"
+                  :disabled="statusUpdating"
+                  @click="cycleStatus"
                 >
-                  <i class="bi bi-book-fill me-1"></i> 읽는 중
+                  <i :class="statusBtn.icon" class="me-1"></i> {{ statusBtn.label }}
                 </button>
-                <button 
-                  v-else
-                  @click="handleUpdateLog('reading')" 
-                  class="btn btn-outline-primary w-100"
-                >
-                  <i class="bi bi-book me-1"></i> 읽는 중
-                </button>
-
-                <button 
-                  v-if="isFinished"
-                  class="btn btn-success disabled w-100"
-                >
-                  <i class="bi bi-check-circle-fill me-1"></i> 완독
-                </button>
-                <button 
-                  v-else
-                  @click="handleUpdateLog('finished')" 
-                  class="btn btn-outline-success w-100"
-                >
-                  <i class="bi bi-check-circle me-1"></i> 완독
-                </button>
+                <small class="text-muted d-block text-center mt-1">
+                  눌러서 상태 변경: 찜 → 읽는 중 → 완독 → 해제
+                </small>
               </div>
             </div>
           </div>
@@ -117,19 +102,35 @@ const availabilities = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-const isReading = computed(() => {
-  return libraryStore.readingList.some(b => b.isbn13 === isbn13)
+const statusUpdating = ref(false)
+
+// 현재 읽음 상태: 'none' | 'wish' | 'reading' | 'finished'
+const currentStatus = computed(() => {
+  if (libraryStore.finishedList.some(b => b.isbn13 === isbn13)) return 'finished'
+  if (libraryStore.readingList.some(b => b.isbn13 === isbn13)) return 'reading'
+  if (libraryStore.wishList.some(b => b.isbn13 === isbn13)) return 'wish'
+  return 'none'
 })
 
-const isFinished = computed(() => {
-  return libraryStore.finishedList.some(b => b.isbn13 === isbn13)
-})
+// 단일 3단계 토글: off → 찜 → 읽는중 → 완독 → off(해제)
+const STATUS_ORDER = ['none', 'wish', 'reading', 'finished']
+const STATUS_META = {
+  none:     { label: '서재에 추가', icon: 'bi bi-plus-circle', cls: 'btn-outline-secondary' },
+  wish:     { label: '찜', icon: 'bi bi-bookmark-heart-fill', cls: 'btn-info' },
+  reading:  { label: '읽는 중', icon: 'bi bi-book-fill', cls: 'btn-primary' },
+  finished: { label: '완독', icon: 'bi bi-check-circle-fill', cls: 'btn-success' },
+}
+const statusBtn = computed(() => STATUS_META[currentStatus.value])
 
-const handleUpdateLog = async (status) => {
-  const statusName = status === 'reading' ? '읽는 중' : '완독'
-  if (confirm(`이 책을 '${statusName}' 상태로 표시할까요?`)) {
-    await libraryStore.updateLog(isbn13, status)
-    alert(`'${statusName}' 상태로 업데이트 되었습니다!`)
+const cycleStatus = async () => {
+  if (statusUpdating.value) return
+  const idx = STATUS_ORDER.indexOf(currentStatus.value)
+  const next = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length]
+  statusUpdating.value = true
+  try {
+    await libraryStore.updateLog(isbn13, next) // next==='none'이면 백엔드가 행 삭제(해제)
+  } finally {
+    statusUpdating.value = false
   }
 }
 
