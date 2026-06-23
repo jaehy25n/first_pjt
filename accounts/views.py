@@ -104,6 +104,10 @@ class LibraryLogCreateView(APIView):
         except Book.DoesNotExist:
             return Response({"detail": "Book not found"}, status=404)
             
+        if status in ('none', 'clear'):
+            ReadingLog.objects.filter(user=request.user, book=book).delete()
+            return Response({"isbn13": book.isbn13, "status": "none", "rating": None})
+
         log, created = ReadingLog.objects.update_or_create(
             user=request.user,
             book=book,
