@@ -23,7 +23,7 @@ class Profile(models.Model):
 
 class ReadingLog(models.Model):
     STATUS_CHOICES = (
-        ('wish', 'Wish'),
+        # 'wish'(찜)는 좋아요로 통합되어 은퇴 — BookPreference(like)로 이전 (D28)
         ('reading', 'Reading'),
         ('finished', 'Finished'),
     )
