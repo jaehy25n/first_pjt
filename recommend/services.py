@@ -21,11 +21,15 @@ def build_candidates(user, seed_isbn13=None, limit=5):
     """
     candidate_limit = 50
 
+    # 선택한 도서관들(union). 비어 있으면 대표(primary)로 폴백 (D29)
     try:
-        primary_library = user.profile.primary_library
+        profile = user.profile
     except Exception:
-        primary_library = None
-    if not primary_library:
+        return []
+    libraries = list(profile.libraries.all())
+    if not libraries and profile.primary_library:
+        libraries = [profile.primary_library]
+    if not libraries:
         return []
 
     # 1) 사용자 시드 수집
@@ -75,17 +79,20 @@ def build_candidates(user, seed_isbn13=None, limit=5):
             bonus += 0.5  # 관심사 분야 약간 가산
         scores[book_id] = scores.get(book_id, 0.0) + bonus
 
-    # 5) 주 도서관 가용 필터 + 점수순 정렬
+    # 5) 선택 도서관 union 가용 필터 + 점수순 정렬 (어디서든 가능하면 후보)
     def assemble(require_loan_available):
         out = []
         for isbn, sc in sorted(scores.items(), key=lambda kv: kv[1], reverse=True):
             if len(out) >= candidate_limit:
                 break
-            holding = Holding.objects.filter(library=primary_library, book_id=isbn).first()
-            if not (holding and holding.has_book):
+            holdings = list(Holding.objects.filter(library__in=libraries, book_id=isbn).select_related('library'))
+            owned = [h for h in holdings if h.has_book]
+            if not owned:
                 continue
-            if require_loan_available and not holding.loan_available:
+            available = [h for h in owned if h.loan_available]
+            if require_loan_available and not available:
                 continue
+            chosen = available[0] if available else owned[0]  # 빌릴 수 있는 곳 우선
             book = Book.objects.filter(isbn13=isbn).first()
             if not book:
                 continue
@@ -99,7 +106,7 @@ def build_candidates(user, seed_isbn13=None, limit=5):
                 "via_isbn13": via_isbn,
                 "via_title": via_title,
                 "signal": ("좋아한 '%s'와 함께 많이 빌린 책" % via_title) if via_title else "도서관 인기 대출 도서",
-                "library_name": primary_library.name,
+                "library_name": chosen.library.name,
                 "score": round(sc, 3),
             })
         return out
