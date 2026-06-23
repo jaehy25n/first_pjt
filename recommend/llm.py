@@ -144,11 +144,13 @@ def select_with_reasons(candidates, profile, limit=5, seed_isbn13=None):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.3,
-            "response_format": {"type": "json_object"}
+            # gpt-5-nano(추론 모델)는 temperature 기본값(1)만 허용 → 0.3 보내면 400. 생략 (D26)
+            "response_format": {"type": "json_object"},
+            # 추론 강도 low: 기본은 후보 40권에 ~10초라 timeout=12를 넘나듦. low면 ~6초·이유 충실 (D27)
+            "reasoning_effort": "low",
         }
-        
-        response = requests.post(f"{GMS_URL}/chat/completions", headers=headers, json=data, timeout=12)
+
+        response = requests.post(f"{GMS_URL}/chat/completions", headers=headers, json=data, timeout=30)
         response.raise_for_status()
         result_json = response.json()
         
