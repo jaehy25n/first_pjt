@@ -9,11 +9,12 @@
       >
       <button 
         v-if="accountStore.isLogin"
-        @click.prevent="handleWishToggle"
+        @click.prevent="handleLikeToggle"
         class="btn btn-light position-absolute top-0 end-0 m-2 rounded-circle shadow-sm p-2 d-flex align-items-center justify-content-center"
         style="width: 40px; height: 40px; z-index: 10;"
+        title="좋아요"
       >
-        <i :class="isWished ? 'bi bi-heart-fill text-danger' : 'bi bi-heart text-secondary'" style="font-size: 1.2rem;"></i>
+        <i :class="isLiked ? 'bi bi-heart-fill text-danger' : 'bi bi-heart text-secondary'" style="font-size: 1.2rem;"></i>
       </button>
     </div>
     <div class="card-body d-flex flex-column">
@@ -50,12 +51,12 @@ const props = defineProps({
 const libraryStore = useLibraryStore()
 const accountStore = useAccountStore()
 
-const isWished = computed(() => {
-  return libraryStore.checkIsWished(props.book.isbn13)
+const isLiked = computed(() => {
+  return libraryStore.checkIsLiked(props.book.isbn13)
 })
 
-const handleWishToggle = async () => {
-  await libraryStore.toggleWish(props.book.isbn13, props.book)
+const handleLikeToggle = async () => {
+  await libraryStore.toggleLike(props.book.isbn13, props.book)
 }
 
 // 가용성 뱃지 스타일 계산
