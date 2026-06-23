@@ -125,7 +125,7 @@ class LibraryLogCreateView(APIView):
             "rating": log.rating
         })
 
-class LibraryToggleWishView(APIView):
+class LibraryToggleLikeView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -231,7 +231,7 @@ class TasteOnboardingView(APIView):
     """온보딩 '표지픽' 취향 저장 (D18 · 취향과 읽음 분리).
         body: {liked:[isbn], disliked:[isbn], topics:[...]}
     liked/disliked → BookPreference(취향 신호, 읽음 여부와 무관).
-    topics → Profile.reading_goal. (찜·읽음은 별도 — 내서재의 toggle-wish / 완독.) 로그인 필요."""
+    topics → Profile.reading_goal. (좋아요는 toggle-like, 읽음은 내서재 완독으로 별도 관리 — D28.) 로그인 필요."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
