@@ -26,18 +26,22 @@
               <p class="mb-0"><strong>KDC:</strong> {{ book.kdc_code }}</p>
 
               <div class="mt-3" v-if="accountStore.isLogin">
-                <button
-                  type="button"
-                  class="btn w-100"
-                  :class="statusBtn.cls"
-                  :disabled="statusUpdating"
-                  @click="cycleStatus"
-                >
-                  <i :class="statusBtn.icon" class="me-1"></i> {{ statusBtn.label }}
-                </button>
-                <small class="text-muted d-block text-center mt-1">
-                  눌러서 상태 변경: 찜 → 읽는 중 → 완독 → 해제
-                </small>
+                <div class="read-slider" :class="{ 'is-busy': statusUpdating }">
+                  <span
+                    class="read-slider-thumb"
+                    :data-status="currentStatus"
+                    :style="{ transform: `translateX(${activeIndex * 100}%)` }"
+                  ></span>
+                  <button
+                    v-for="opt in STATUS_OPTS"
+                    :key="opt.value"
+                    type="button"
+                    class="read-slider-opt"
+                    :class="{ active: currentStatus === opt.value }"
+                    :disabled="statusUpdating"
+                    @click="setStatus(opt.value)"
+                  >{{ opt.label }}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -104,31 +108,24 @@ const errorMessage = ref('')
 
 const statusUpdating = ref(false)
 
-// 현재 읽음 상태: 'none' | 'wish' | 'reading' | 'finished'
+// 읽기 진행 슬라이더 (찜 제외): 'none'(읽기 전) | 'reading' | 'finished'
+const STATUS_OPTS = [
+  { value: 'none', label: '읽기 전' },
+  { value: 'reading', label: '읽는 중' },
+  { value: 'finished', label: '완독' },
+]
 const currentStatus = computed(() => {
   if (libraryStore.finishedList.some(b => b.isbn13 === isbn13)) return 'finished'
   if (libraryStore.readingList.some(b => b.isbn13 === isbn13)) return 'reading'
-  if (libraryStore.wishList.some(b => b.isbn13 === isbn13)) return 'wish'
-  return 'none'
+  return 'none' // 읽기 전 (찜은 이 컨트롤에서 제외 — 카드 하트로)
 })
+const activeIndex = computed(() => STATUS_OPTS.findIndex(o => o.value === currentStatus.value))
 
-// 단일 3단계 토글: off → 찜 → 읽는중 → 완독 → off(해제)
-const STATUS_ORDER = ['none', 'wish', 'reading', 'finished']
-const STATUS_META = {
-  none:     { label: '서재에 추가', icon: 'bi bi-plus-circle', cls: 'btn-outline-secondary' },
-  wish:     { label: '찜', icon: 'bi bi-bookmark-heart-fill', cls: 'btn-info' },
-  reading:  { label: '읽는 중', icon: 'bi bi-book-fill', cls: 'btn-primary' },
-  finished: { label: '완독', icon: 'bi bi-check-circle-fill', cls: 'btn-success' },
-}
-const statusBtn = computed(() => STATUS_META[currentStatus.value])
-
-const cycleStatus = async () => {
-  if (statusUpdating.value) return
-  const idx = STATUS_ORDER.indexOf(currentStatus.value)
-  const next = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length]
+const setStatus = async (value) => {
+  if (statusUpdating.value || value === currentStatus.value) return
   statusUpdating.value = true
   try {
-    await libraryStore.updateLog(isbn13, next) // next==='none'이면 백엔드가 행 삭제(해제)
+    await libraryStore.updateLog(isbn13, value) // 'none'(읽기 전)이면 백엔드가 행 삭제
   } finally {
     statusUpdating.value = false
   }
@@ -155,3 +152,41 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.read-slider {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background-color: #e9ecef;
+  border-radius: 999px;
+  padding: 4px;
+  user-select: none;
+}
+.read-slider.is-busy { opacity: 0.6; pointer-events: none; }
+.read-slider-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background-color: #6c757d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s ease, background-color 0.25s ease;
+}
+.read-slider-thumb[data-status="reading"] { background-color: #0d6efd; }
+.read-slider-thumb[data-status="finished"] { background-color: #198754; }
+.read-slider-opt {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+.read-slider-opt.active { color: #fff; font-weight: 600; }
+</style>
