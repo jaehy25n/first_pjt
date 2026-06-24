@@ -9,4 +9,5 @@ urlpatterns = [
     path('books/<str:isbn13>/availability/', views.BookAvailabilityView.as_view(), name='book_availability'),
     path('books/<str:isbn13>/seoul-libraries/', views.BookSeoulLibrariesView.as_view(), name='book_seoul_libraries'),
     path('books/<str:isbn13>/usage/', views.BookUsageView.as_view(), name='book_usage'),
+    path('books/<str:isbn13>/borrow-map/', views.BorrowMapView.as_view(), name='book_borrow_map'),
 ]
