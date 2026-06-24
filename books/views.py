@@ -1,3 +1,5 @@
+import math
+
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
@@ -89,3 +91,38 @@ class BookUsageView(APIView):
     """책 이용분석 — 연관 키워드 + 월별 대출 추이 (usageAnalysisList lazy 1콜). ⑧, D33 정보나루 B."""
     def get(self, request, isbn13):
         return Response(book_usage(isbn13))
+
+
+class LibraryNearbyView(APIView):
+    """내 위치(lat,lng) 기준 가까운 도서관 N개 — Haversine 거리정렬 (D34 Tier1). 외부 API 없음."""
+    def get(self, request):
+        try:
+            lat = float(request.query_params.get('lat'))
+            lng = float(request.query_params.get('lng'))
+        except (TypeError, ValueError):
+            return Response({"detail": "lat, lng 쿼리 파라미터가 필요합니다."}, status=400)
+        try:
+            n = min(50, max(1, int(request.query_params.get('n', 10))))
+        except (TypeError, ValueError):
+            n = 10
+
+        def haversine(la1, lo1, la2, lo2):
+            R = 6371.0  # km
+            p1, p2 = math.radians(la1), math.radians(la2)
+            dphi = math.radians(la2 - la1)
+            dlmb = math.radians(lo2 - lo1)
+            a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+            return 2 * R * math.asin(math.sqrt(a))
+
+        out = []
+        for lib in Library.objects.filter(latitude__isnull=False, longitude__isnull=False):
+            out.append({
+                "lib_code": lib.lib_code,
+                "name": lib.name,
+                "address": lib.address,
+                "latitude": lib.latitude,
+                "longitude": lib.longitude,
+                "distance_km": round(haversine(lat, lng, lib.latitude, lib.longitude), 2),
+            })
+        out.sort(key=lambda x: x["distance_km"])
+        return Response({"count": min(n, len(out)), "libraries": out[:n]})
