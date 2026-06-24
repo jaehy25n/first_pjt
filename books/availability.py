@@ -16,7 +16,7 @@ from datetime import timedelta
 import requests
 from django.utils import timezone
 
-from .models import Holding, Library
+from .models import Holding
 
 BOOK_EXIST_URL = "http://data4library.kr/api/bookExist"
 LIB_BY_BOOK_URL = "http://data4library.kr/api/libSrchByBook"
@@ -188,21 +188,20 @@ def _to_float(v):
         return None
 
 
-def borrow_map(isbn, lat=None, lng=None, live_n=8, gray_n=30):
+def borrow_map(isbn, lat=None, lng=None, live_n=8):
     """책 상세 '빌릴 수 있는 도서관' 지도용 (D36).
-    소장관(libSrchByBook) + 내 위치 가까운 N개관 live 상태 + 인근 미소장(회색).
-    status: available(대출가능)·loaned(대출중)·held_unknown(소장·상태미확인)·none(미소장).
+    소장관(libSrchByBook) + 내 위치 가까운 N개관 live 상태. (미소장 도서관은 반환하지 않음 — 표시 안 함.)
+    status: available(대출가능)·loaned(대출중)·held_unknown(소장·상태미확인). (live에서 실제 미소장이면 none — 프론트가 거름.)
     외부호출 = libSrchByBook 1콜 + bookExist 최대 live_n콜(가까운 소장관만, throttle 방어 = D33③).
     위치(lat/lng) 없으면 live 0 → 소장관 전부 held_unknown(내 위치 줄 때만 색칠)."""
     has_location = lat is not None and lng is not None
     live_n = max(0, min(live_n, MAX_CALLS_PER_REQUEST))
 
     # 1) 서울 소장관 + 좌표 (libSrchByBook 1콜). 일단 전부 held_unknown.
-    holding, holding_codes = [], set()
+    holding = []
     for lib in libs_for_book(isbn):
         code = lib.get("lib_code")
         la, lo = _to_float(lib.get("latitude")), _to_float(lib.get("longitude"))
-        holding_codes.add(code)
         dist = round(_haversine(lat, lng, la, lo), 2) if (has_location and la is not None and lo is not None) else None
         holding.append({
             "lib_code": code, "name": lib.get("name"), "address": lib.get("address"),
@@ -225,23 +224,7 @@ def borrow_map(isbn, lat=None, lng=None, live_n=8, gray_n=30):
             else:  # 소장 목록엔 있으나 실시간으론 미소장 → 회색
                 h["has_book"], h["status"] = False, "none"
 
-    # 3) 회색(미소장) = DB Library 355 중 소장관 제외, 내 위치 가까운 gray_n (위치 있을 때만)
-    gray = []
-    if has_location and gray_n:
-        for lib in (Library.objects
-                    .filter(latitude__isnull=False, longitude__isnull=False)
-                    .exclude(lib_code__in=holding_codes)):
-            gray.append({
-                "lib_code": lib.lib_code, "name": lib.name, "address": lib.address,
-                "latitude": lib.latitude, "longitude": lib.longitude,
-                "distance_km": round(_haversine(lat, lng, lib.latitude, lib.longitude), 2),
-                "has_book": False, "status": "none",
-            })
-        gray.sort(key=lambda x: x["distance_km"])
-        gray = gray[:gray_n]
-
-    libraries = holding + gray
-    libraries.sort(key=lambda x: (x["distance_km"] is None, x["distance_km"] or 0))
+    libraries = sorted(holding, key=lambda x: (x["distance_km"] is None, x["distance_km"] or 0))
     return {
         "isbn13": isbn, "has_location": has_location,
         "holding_count": len(holding), "live_checked": live_checked,
