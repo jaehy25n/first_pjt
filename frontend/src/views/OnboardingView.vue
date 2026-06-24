@@ -2,7 +2,7 @@
   <div class="container py-4" style="max-width: 920px;">
     <h3 class="fw-bold mb-1">취향 고르기</h3>
     <p class="text-muted mb-4">
-      끌리는 책에 <span class="text-primary fw-semibold">좋아요</span>를 눌러주세요.
+      끌리는 책의 표지를 눌러 <span class="text-primary fw-semibold">좋아요</span>를 표시해주세요.
       <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
     </p>
 
@@ -18,23 +18,26 @@
 
     <div v-else>
       <div class="row g-3">
-        <div v-for="book in books" :key="book.isbn13" class="col-6 col-md-4 col-lg-3">
-          <div class="card h-100 shadow-sm" :class="cardClass(book.isbn13)">
-            <img
-              :src="book.cover_url"
-              class="card-img-top cover"
-              :alt="book.title"
-              @error="onImgError"
-            />
+        <div v-for="book in books" :key="book.isbn13" class="col-6 col-md-3">
+          <div
+            class="card h-100 shadow-sm pick-card"
+            :class="cardClass(book.isbn13)"
+            @click="toggle(book.isbn13, 'like')"
+          >
+            <div class="position-relative">
+              <img
+                :src="book.cover_url"
+                class="card-img-top cover"
+                :alt="book.title"
+                @error="onImgError"
+              />
+              <span v-if="picks[book.isbn13] === 'like'" class="badge bg-primary position-absolute top-0 end-0 m-2">
+                ❤️ 좋아요
+              </span>
+            </div>
             <div class="card-body p-2 d-flex flex-column">
               <span v-if="kdcLabel(book.kdc_code)" class="badge bg-light text-dark align-self-start mb-1">{{ kdcLabel(book.kdc_code) }}</span>
-              <p class="small fw-semibold mb-2 flex-grow-1 title-clamp">{{ book.title }}</p>
-              <button
-                type="button"
-                class="btn btn-sm w-100"
-                :class="picks[book.isbn13] === 'like' ? 'btn-primary' : 'btn-outline-primary'"
-                @click="toggle(book.isbn13, 'like')"
-              >{{ picks[book.isbn13] === 'like' ? '👍 좋아요 ✓' : '👍 좋아요' }}</button>
+              <p class="small fw-semibold mb-0 flex-grow-1 title-clamp">{{ book.title }}</p>
             </div>
           </div>
         </div>
@@ -105,7 +108,7 @@ const fetchBooks = async () => {
       picks: liked,
       seen: [...seen.value],
     })
-    const next = res.data.books || []
+    const next = (res.data.books || []).slice(0, 12) // 온보딩은 4×3 = 12개 노출
     next.forEach((b) => seen.value.add(b.isbn13))
     books.value = next
   } catch (e) {
@@ -158,6 +161,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.pick-card {
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+.pick-card:hover {
+  transform: translateY(-4px);
+}
 .cover {
   height: 200px;
   object-fit: cover;
