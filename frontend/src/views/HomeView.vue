@@ -1,5 +1,15 @@
 <template>
   <div class="container mt-4">
+    <!-- 비로그인: 로그인 유도 CTA -->
+    <div v-if="!accountStore.isLogin" class="p-5 mb-5 bg-light rounded-3 shadow-sm text-center">
+      <span class="badge bg-dark mb-2">다음책</span>
+      <h1 class="display-6 fw-bold mb-3">내 도서관 맞춤 '다음 책'</h1>
+      <p class="text-muted mb-4">로그인하면 내가 고른 도서관에서 <strong>지금 빌릴 수 있는</strong> 책을 취향에 맞춰 추천해 드려요.</p>
+      <router-link to="/login" class="btn btn-primary btn-lg me-2">로그인</router-link>
+      <router-link to="/signup" class="btn btn-outline-primary btn-lg">회원가입</router-link>
+    </div>
+
+    <template v-else>
     <!-- 오늘의 추천 (히어로 섹션 - 심플/모던 버전) -->
     <div class="p-5 mb-5 bg-light rounded-3 shadow-sm">
       <div class="container-fluid">
@@ -20,10 +30,17 @@
           <p class="mt-3 text-muted">AI가 취향을 분석하여 맞춤형 도서를 선별하고 있습니다... (수 초 소요)</p>
         </div>
 
+        <!-- 에러: 다시 시도 -->
+        <div v-else-if="recommendStore.error" class="alert alert-danger border-0 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span>추천을 불러오는 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.</span>
+          <button class="btn btn-outline-danger btn-sm" @click="refreshRecommendations">다시 시도</button>
+        </div>
+
         <!-- 데이터 없음 -->
         <div v-else-if="recommendStore.empty" class="alert alert-info py-4 border-0 shadow-sm">
-          <h5 class="fw-bold">추천 도서를 찾을 수 없습니다</h5>
-          <p class="mb-0">{{ recommendStore.hint }}</p>
+          <h5 class="fw-bold">아직 추천할 책을 못 찾았어요</h5>
+          <p class="mb-1">{{ recommendStore.hint }}</p>
+          <router-link to="/onboarding" class="btn btn-outline-primary btn-sm mt-2">취향·도서관 다시 고르기</router-link>
         </div>
 
         <!-- 추천 결과 -->
@@ -75,6 +92,7 @@
 
     <!-- 취향 발견 (반복정제) -->
     <DiscoverSection />
+    </template>
 
   </div>
 </template>
@@ -83,16 +101,18 @@
 import { onMounted } from 'vue'
 import DiscoverSection from '@/components/DiscoverSection.vue'
 import { useRecommendStore } from '@/stores/recommend'
+import { useAccountStore } from '@/stores/accounts'
 
 const recommendStore = useRecommendStore()
+const accountStore = useAccountStore()
 
 const refreshRecommendations = () => {
   recommendStore.fetchRecommendations(true)
 }
 
 onMounted(() => {
-  // 추천 로드 (캐시되어 있으면 API 재호출 안 함)
-  recommendStore.fetchRecommendations()
+  // 로그인 상태일 때만 추천 로드 (캐시되어 있으면 API 재호출 안 함)
+  if (accountStore.isLogin) recommendStore.fetchRecommendations()
 })
 </script>
 
