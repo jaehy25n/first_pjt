@@ -73,70 +73,26 @@
       </div>
     </div>
 
-    <!-- 탐색하기 (도서 목록) -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="fw-bold mb-0">도서 탐색</h2>
-      <router-link to="/search" class="btn btn-outline-primary">
-        전체보기
-      </router-link>
-    </div>
-
-    <!-- 로딩 스피너 -->
-    <div v-if="isLoading" class="text-center my-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-3">도서 목록을 불러오는 중입니다...</p>
-    </div>
-
-    <!-- 에러 메시지 -->
-    <div v-else-if="errorMessage" class="alert alert-danger border-0 shadow-sm">
-      {{ errorMessage }}
-    </div>
-
-    <!-- 도서 카드 그리드 -->
-    <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
-      <div class="col" v-for="book in books" :key="book.isbn13">
-        <BookCard :book="book" />
-      </div>
-    </div>
-
-    <!-- 결과 없음 -->
-    <div v-if="!isLoading && !errorMessage && books.length === 0" class="text-center my-5 text-muted">
-      <p>등록된 도서가 없습니다.</p>
-    </div>
+    <!-- 취향 발견 (반복정제) -->
+    <DiscoverSection />
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import axiosInstance from '@/api/axios'
-import BookCard from '@/components/BookCard.vue'
+import { onMounted } from 'vue'
+import DiscoverSection from '@/components/DiscoverSection.vue'
 import { useRecommendStore } from '@/stores/recommend'
 
 const recommendStore = useRecommendStore()
-
-const books = ref([])
-const isLoading = ref(true)
-const errorMessage = ref('')
 
 const refreshRecommendations = () => {
   recommendStore.fetchRecommendations(true)
 }
 
-onMounted(async () => {
-  // 컴포넌트 마운트 시 추천 도서 로드 (캐시되어 있으면 API 재호출 안 함)
+onMounted(() => {
+  // 추천 로드 (캐시되어 있으면 API 재호출 안 함)
   recommendStore.fetchRecommendations()
-
-  // 일반 도서 목록 로드
-  try {
-    const res = await axiosInstance.get('/api/books/')
-    books.value = res.data.results || []
-  } catch (error) {
-    console.error('도서 목록 로드 실패:', error)
-    errorMessage.value = '도서 목록을 불러오는 중 오류가 발생했습니다.'
-  } finally {
-    isLoading.value = false
-  }
 })
 </script>
 
