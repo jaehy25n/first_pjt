@@ -101,11 +101,13 @@ def badge_map(isbns, libraries):
     return out
 
 
-def libs_for_book(isbn, region="11"):
-    """책 1권의 (서울) 소장 도서관 목록 — libSrchByBook. [{lib_code,name,address,latitude,longitude}] · 실패 시 []."""
+def libs_for_book(isbn, region="11", page_size=400):
+    """책 1권의 (서울) 소장 도서관 목록 — libSrchByBook. [{lib_code,name,address,latitude,longitude}] · 실패 시 [].
+    libSrchByBook 기본 pageSize=10에 잘리므로 page_size를 크게 줘 전 소장관을 1콜로 받는다(서울 도서관 총 ~355곳).
+    페이지 수만 늘 뿐 호출 횟수는 책당 1콜 유지(쿼터 영향 없음)."""
     if not isbn:
         return []
-    resp = _get(LIB_BY_BOOK_URL, {"isbn": isbn, "region": region})
+    resp = _get(LIB_BY_BOOK_URL, {"isbn": isbn, "region": region, "pageSize": page_size})
     if not resp:
         return []
     out = []
