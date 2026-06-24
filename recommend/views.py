@@ -99,7 +99,7 @@ class DiscoverView(APIView):
                     continue
                 per_bucket[b] = per_bucket.get(b, 0) + 1
                 cand.append(isbn)
-                if len(cand) >= 12:
+                if len(cand) >= 15:
                     break
 
         # 표지 있는 책만(시각 피커, D35) + 선택 도서관 배지 prefetch
@@ -107,6 +107,6 @@ class DiscoverView(APIView):
             Prefetch('holdings', queryset=Holding.objects.filter(library__in=libraries).select_related('library'), to_attr='user_holding')
         )
         bmap = {b.isbn13: b for b in books}
-        ordered = [bmap[i] for i in cand if i in bmap][:12]  # 랭킹 순서 유지
+        ordered = [bmap[i] for i in cand if i in bmap][:15]  # 랭킹 순서 유지
         data = BookCardSerializer(ordered, many=True, context={'libraries': libraries}).data
         return Response({"books": data, "empty": not data})
