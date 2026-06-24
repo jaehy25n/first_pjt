@@ -13174,5 +13174,833 @@
     "co_book": "9788936438838",
     "score": 91.0
   }
+},
+{
+  "model": "books.coloan",
+  "pk": 218,
+  "fields": {
+    "book": "9788996525318",
+    "co_book": "9791192300818",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 219,
+  "fields": {
+    "book": "9788936434120",
+    "co_book": "9788954616515",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 220,
+  "fields": {
+    "book": "9788936434120",
+    "co_book": "9788936434595",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 221,
+  "fields": {
+    "book": "9788936434120",
+    "co_book": "9788954651134",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 222,
+  "fields": {
+    "book": "9788936434120",
+    "co_book": "9791130646381",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 223,
+  "fields": {
+    "book": "9788936434120",
+    "co_book": "9788954695053",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 224,
+  "fields": {
+    "book": "9791197831744",
+    "co_book": "9788901276533",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 225,
+  "fields": {
+    "book": "9788998441012",
+    "co_book": "9788954695053",
+    "score": 79.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 226,
+  "fields": {
+    "book": "9788998441012",
+    "co_book": "9791130646381",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 227,
+  "fields": {
+    "book": "9788937473401",
+    "co_book": "9791141601300",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 228,
+  "fields": {
+    "book": "9788937473401",
+    "co_book": "9791130646381",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 229,
+  "fields": {
+    "book": "9788937473401",
+    "co_book": "9788954697941",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 230,
+  "fields": {
+    "book": "9788998441074",
+    "co_book": "9788954695053",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 231,
+  "fields": {
+    "book": "9788998441074",
+    "co_book": "9788936438838",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 232,
+  "fields": {
+    "book": "9788934972464",
+    "co_book": "9791168473690",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 233,
+  "fields": {
+    "book": "9788954677158",
+    "co_book": "9791160947304",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 234,
+  "fields": {
+    "book": "9788954677158",
+    "co_book": "9788954690690",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 235,
+  "fields": {
+    "book": "9788954681155",
+    "co_book": "9788954695053",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 236,
+  "fields": {
+    "book": "9788954681155",
+    "co_book": "9791130646381",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 237,
+  "fields": {
+    "book": "9791130646381",
+    "co_book": "9791141601300",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 238,
+  "fields": {
+    "book": "9791189327156",
+    "co_book": "9788954680004",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 239,
+  "fields": {
+    "book": "9791189327156",
+    "co_book": "9788954691673",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 240,
+  "fields": {
+    "book": "9791189327156",
+    "co_book": "9791130646381",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 241,
+  "fields": {
+    "book": "9791189327156",
+    "co_book": "9788954695053",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 242,
+  "fields": {
+    "book": "9791189327156",
+    "co_book": "9788901276533",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 243,
+  "fields": {
+    "book": "9788901276533",
+    "co_book": "9788954691673",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 244,
+  "fields": {
+    "book": "9788925588735",
+    "co_book": "9788954695053",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 245,
+  "fields": {
+    "book": "9788925588735",
+    "co_book": "9788936438838",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 246,
+  "fields": {
+    "book": "9788934911289",
+    "co_book": "9791168419193",
+    "score": 80.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 247,
+  "fields": {
+    "book": "9788954682152",
+    "co_book": "9788954651134",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 248,
+  "fields": {
+    "book": "9788954682152",
+    "co_book": "9788954695053",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 249,
+  "fields": {
+    "book": "9788954682152",
+    "co_book": "9791130646381",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 250,
+  "fields": {
+    "book": "9788954691673",
+    "co_book": "9788954697941",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 251,
+  "fields": {
+    "book": "9788996991342",
+    "co_book": "9791168473690",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 252,
+  "fields": {
+    "book": "9791130637037",
+    "co_book": "9791168473690",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 253,
+  "fields": {
+    "book": "9791192300818",
+    "co_book": "9788901276533",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 254,
+  "fields": {
+    "book": "9791192300818",
+    "co_book": "9791130646381",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 255,
+  "fields": {
+    "book": "9788931011623",
+    "co_book": "9788954695053",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 256,
+  "fields": {
+    "book": "9788931011623",
+    "co_book": "9791130646381",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 257,
+  "fields": {
+    "book": "9788931011623",
+    "co_book": "9788936438838",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 258,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9791130646381",
+    "score": 79.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 259,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9788954693462",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 260,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9791141601300",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 261,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9788954695053",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 262,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9788901276533",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 263,
+  "fields": {
+    "book": "9788932024639",
+    "co_book": "9788930041683",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 264,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788932034829",
+    "score": 79.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 265,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788932034812",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 266,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788954648905",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 267,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788954693462",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 268,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788982814792",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 269,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788932020006",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 270,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9791130646381",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 271,
+  "fields": {
+    "book": "9788936434595",
+    "co_book": "9788954695053",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 272,
+  "fields": {
+    "book": "9788936438838",
+    "co_book": "9788954680004",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 273,
+  "fields": {
+    "book": "9788936438838",
+    "co_book": "9788954695053",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 274,
+  "fields": {
+    "book": "9788936447694",
+    "co_book": "9788936448523",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 275,
+  "fields": {
+    "book": "9788936447694",
+    "co_book": "9788949162188",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 276,
+  "fields": {
+    "book": "9788954646079",
+    "co_book": "9788936436902",
+    "score": 80.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 277,
+  "fields": {
+    "book": "9788954646079",
+    "co_book": "9788932018041",
+    "score": 79.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 278,
+  "fields": {
+    "book": "9788954646079",
+    "co_book": "9788954695053",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 279,
+  "fields": {
+    "book": "9788954646079",
+    "co_book": "9788954681155",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 280,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788932034812",
+    "score": 79.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 281,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788932034829",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 282,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788982814792",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 283,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788932013046",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 284,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9791130646381",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 285,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9791141601300",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 286,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788954695053",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 287,
+  "fields": {
+    "book": "9788954651134",
+    "co_book": "9788954693462",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 288,
+  "fields": {
+    "book": "9788954697941",
+    "co_book": "9788936439651",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 289,
+  "fields": {
+    "book": "9788956602998",
+    "co_book": "9791167374561",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 290,
+  "fields": {
+    "book": "9788956605593",
+    "co_book": "9788954695053",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 291,
+  "fields": {
+    "book": "9788956605593",
+    "co_book": "9791130646381",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 292,
+  "fields": {
+    "book": "9788956605593",
+    "co_book": "9788901276533",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 293,
+  "fields": {
+    "book": "9788956608846",
+    "co_book": "9788954695053",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 294,
+  "fields": {
+    "book": "9788956608846",
+    "co_book": "9788954680004",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 295,
+  "fields": {
+    "book": "9791161650630",
+    "co_book": "9788936438838",
+    "score": 76.0
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 296,
+  "fields": {
+    "book": "9791168473690",
+    "co_book": "9791192300818",
+    "score": 73.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 297,
+  "fields": {
+    "book": "9791189709051",
+    "co_book": "9788936438838",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 298,
+  "fields": {
+    "book": "9791190090018",
+    "co_book": "9788936438838",
+    "score": 77.6
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 299,
+  "fields": {
+    "book": "9780525647973",
+    "co_book": "9780375872983",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 300,
+  "fields": {
+    "book": "9788932013046",
+    "co_book": "9788982814792",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 301,
+  "fields": {
+    "book": "9788932013046",
+    "co_book": "9788954693462",
+    "score": 78.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 302,
+  "fields": {
+    "book": "9788932013046",
+    "co_book": "9788936438838",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 303,
+  "fields": {
+    "book": "9788932022888",
+    "co_book": "9791168473690",
+    "score": 76.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 304,
+  "fields": {
+    "book": "9788932022888",
+    "co_book": "9788954448413",
+    "score": 75.2
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 305,
+  "fields": {
+    "book": "9788932022888",
+    "co_book": "9788954695053",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 306,
+  "fields": {
+    "book": "9788932473901",
+    "co_book": "9791168473690",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 307,
+  "fields": {
+    "book": "9788932923062",
+    "co_book": "9788954695053",
+    "score": 72.8
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 308,
+  "fields": {
+    "book": "9788936434243",
+    "co_book": "9788954695053",
+    "score": 74.4
+  }
+},
+{
+  "model": "books.coloan",
+  "pk": 309,
+  "fields": {
+    "book": "9788936434243",
+    "co_book": "9791189327156",
+    "score": 72.8
+  }
 }
 ]

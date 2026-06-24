@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 루트 fixtures/ 를 loaddata 이름 검색 경로에 등록 (loaddata interests seed embeddings)
+FIXTURE_DIRS = [BASE_DIR / 'fixtures']
+
 load_dotenv(BASE_DIR / '.env')
 
 

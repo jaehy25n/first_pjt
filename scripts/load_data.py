@@ -129,42 +129,42 @@ def load_coloans():
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
         
-    count = 0
+    # 함께대출 + 마니아추천 + 다독자추천을 유사도 엣지로 통합 (D30).
+    # 가중: 함께대출 1.0 (직접 신호) / 마니아·다독자 0.8 (보조). 같은 쌍은 최고점 유지.
+    LIST_WEIGHTS = [("coloan", 1.0), ("mania", 0.8), ("reader", 0.8)]
+    edge_score = {}  # (base_isbn, target_isbn) -> 최고 score
     for item in data:
         base_isbn = clean_isbn(item.get("isbn13"))
         if not base_isbn:
             continue
-            
-        try:
-            base_book = Book.objects.get(isbn13=base_isbn)
-        except Book.DoesNotExist:
+        for key, weight in LIST_WEIGHTS:
+            for i, co_item in enumerate(item.get(key, [])):
+                target_isbn = clean_isbn(co_item.get("isbn13"))
+                if not target_isbn or target_isbn == base_isbn:
+                    continue
+                score = float(max(100 - i, 1)) * weight
+                k = (base_isbn, target_isbn)
+                if score > edge_score.get(k, 0):
+                    edge_score[k] = score
+
+    # DB에 양쪽 책이 다 있는 엣지만 적재
+    existing = set(Book.objects.values_list("isbn13", flat=True))
+    count = 0
+    for (base_isbn, target_isbn), score in edge_score.items():
+        if base_isbn not in existing or target_isbn not in existing:
             continue
-            
-        coloans = item.get("coloan", [])
-        for i, co_item in enumerate(coloans):
-            target_isbn = clean_isbn(co_item.get("isbn13"))
-            if not target_isbn or base_isbn == target_isbn:
-                continue
-                
-            try:
-                target_book = Book.objects.get(isbn13=target_isbn)
-            except Book.DoesNotExist:
-                continue
-                
-            # 간단히 상위 랭크일수록 점수가 높도록 score 부여
-            score = float(max(100 - i, 1))
-            
-            CoLoan.objects.update_or_create(
-                book=base_book,
-                co_book=target_book,
-                defaults={"score": score}
-            )
-            count += 1
-    print(f"Loaded {count} coloans.")
+        CoLoan.objects.update_or_create(
+            book_id=base_isbn,
+            co_book_id=target_isbn,
+            defaults={"score": round(score, 2)}
+        )
+        count += 1
+    print(f"Loaded {count} edges (coloan+mania+reader).")
 
 if __name__ == "__main__":
     load_libraries()
     load_books()
     load_holdings()
+    load_coloans()
     load_coloans()
     print("Done loading data.")
