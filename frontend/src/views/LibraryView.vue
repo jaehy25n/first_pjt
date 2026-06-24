@@ -2,9 +2,6 @@
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold mb-0">내 서재</h2>
-      <button class="btn btn-outline-secondary btn-sm" @click="libraryStore.fetchLibrary">
-        새로고침
-      </button>
     </div>
 
     <!-- 로딩 스피너 -->
@@ -97,7 +94,7 @@
             <div class="col-md-6">
               <div class="card shadow-sm h-100">
                 <div class="card-body">
-                  <h5 class="card-title fw-bold mb-4">월별 완독 권수</h5>
+                  <h6 class="card-title fw-bold mb-4">월별 완독 권수</h6>
                   <div style="height: 300px;">
                     <Bar :data="chartDataMonthly" :options="chartOptions" />
                   </div>
@@ -107,7 +104,7 @@
             <div class="col-md-6">
               <div class="card shadow-sm h-100">
                 <div class="card-body">
-                  <h5 class="card-title fw-bold mb-4">완독 주제(KDC) 분포</h5>
+                  <h6 class="card-title fw-bold mb-4">완독 주제(KDC) 분포</h6>
                   <div style="height: 300px; display: flex; justify-content: center;">
                     <Doughnut :data="chartDataKdc" :options="chartOptions" />
                   </div>

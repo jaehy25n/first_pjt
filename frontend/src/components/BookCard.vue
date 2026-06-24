@@ -17,9 +17,9 @@
         <i :class="isLiked ? 'bi bi-heart-fill text-danger' : 'bi bi-heart text-secondary'" style="font-size: 1.2rem;"></i>
       </button>
     </div>
-    <div class="card-body d-flex flex-column">
-      <h5 class="card-title">{{ book.title }}</h5>
-      <p class="card-text">{{ book.author }}</p>
+    <div class="card-body d-flex flex-column text-start">
+      <h6 class="card-title fw-bold">{{ book.title }}</h6>
+      <p class="card-text text-muted small">{{ book.author }}</p>
       
       <div class="mb-3" v-if="book.availability">
         <span class="badge" :class="badgeClass">
@@ -28,7 +28,7 @@
       </div>
 
       <div class="mt-auto">
-        <router-link :to="`/books/${book.isbn13}`" class="btn btn-primary w-100">
+        <router-link :to="`/books/${book.isbn13}`" class="btn btn-primary w-100" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
           상세보기
         </router-link>
       </div>

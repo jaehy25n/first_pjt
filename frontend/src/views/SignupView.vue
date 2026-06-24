@@ -23,7 +23,7 @@
               v-model.trim="password"
               required
             >
-            <div class="form-text">8자 이상, 너무 단순하거나 흔한 비밀번호는 사용할 수 없어요.</div>
+            
           </div>
           <div class="mb-3">
             <label for="passwordConfirm" class="form-label">비밀번호 확인</label>

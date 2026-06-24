@@ -23,7 +23,7 @@
     </div>
 
     <template v-else>
-      <div v-if="books.length" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+      <div v-if="books.length" class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-2">
         <div v-for="book in books" :key="book.isbn13" class="col">
           <div
             class="card h-100 shadow-sm discover-card"
@@ -35,16 +35,17 @@
                 :src="book.cover_url || 'https://via.placeholder.com/150x200?text=No+Cover'"
                 class="card-img-top cover" :alt="book.title" @error="onImgError"
               />
-              <span class="badge position-absolute top-0 end-0 m-2" :class="badgeClass(book)">{{ badgeText(book) }}</span>
+              <span class="badge position-absolute top-0 end-0 m-1" :class="badgeClass(book)">{{ badgeText(book) }}</span>
               <span v-if="isPicked(book.isbn13)" class="badge bg-primary position-absolute top-0 start-0 m-2">
                 <i class="bi bi-check-lg"></i> 선택
               </span>
             </div>
-            <div class="card-body p-2 d-flex flex-column">
-              <p class="small fw-semibold mb-1 title-clamp">{{ book.title }}</p>
-              <p class="text-muted mb-2" style="font-size: 0.75rem;">{{ book.author }}</p>
+            <div class="card-body p-1 d-flex flex-column">
+              <p class="small fw-semibold mb-1 title-clamp" style="font-size: 0.8rem;">{{ book.title }}</p>
+              <p class="text-muted mb-1" style="font-size: 0.7rem;">{{ book.author }}</p>
               <router-link
-                :to="`/books/${book.isbn13}`" class="btn btn-outline-secondary btn-sm mt-auto"
+                :to="`/books/${book.isbn13}`" class="btn btn-outline-secondary btn-sm mt-auto py-0"
+                style="font-size: 0.7rem;"
                 @click.stop
               >상세보기</router-link>
             </div>

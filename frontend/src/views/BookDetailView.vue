@@ -19,7 +19,7 @@
               class="card-img-top img-fluid" 
               alt="book cover"
             >
-            <div class="card-body">
+            <div class="card-body text-start">
               <p class="mb-1"><strong>저자:</strong> {{ book.author }}</p>
               <p class="mb-1"><strong>출판사:</strong> {{ book.publisher }}</p>
               <p class="mb-1"><strong>출판연도:</strong> {{ book.pub_year }}</p>
@@ -48,16 +48,16 @@
         </div>
 
         <!-- 2단: 도서 소개 및 도서관 가용성 (우측) -->
-        <div class="col-md-8">
-          <h2 class="mb-3">{{ book.title }}</h2>
+        <div class="col-md-8 text-start">
+          <hr class="my-2 mb-4">
+          <h2 class="mb-3 fs-3 fw-bold">{{ book.title }}</h2>
           <div class="mb-4">
-            <h5>도서 소개</h5>
             <p style="white-space: pre-wrap;">{{ book.description || '도서 소개가 제공되지 않습니다.' }}</p>
           </div>
 
           <hr class="my-4">
 
-          <div>
+          <div class="text-start">
             <h5 class="mb-3">도서관별 소장 및 대출 현황</h5>
             
             <div v-if="availabilities.length > 0">
@@ -65,9 +65,6 @@
                 <div v-for="avail in availabilities" :key="avail.lib_code" class="list-group-item d-flex justify-content-between align-items-center">
                   <div>
                     <h6 class="mb-0">{{ avail.library_name }}</h6>
-                    <small v-if="!avail.has_book" class="text-muted">미소장</small>
-                    <small v-else-if="avail.loan_available" class="text-success">대출가능</small>
-                    <small v-else class="text-warning">대출중</small>
                   </div>
                   
                   <div>

@@ -1,8 +1,8 @@
 <template>
   <div class="container mt-4">
     <div class="mb-4">
-      <h2>어떤 책을 찾으시나요?</h2>
-      <p>도서 제목이나 저자를 검색하시면, 주 도서관의 대출 가능 여부까지 한 번에 알려드립니다.</p>
+      <h1 class="text-start">어떤 책을 찾으시나요?</h1>
+      <p class="mb-5 text-start">도서 제목이나 저자를 검색하시면, 주 도서관의 대출 가능 여부까지 한 번에 알려드립니다.</p>
       
       <form @submit.prevent="handleSearch" class="d-flex gap-2">
         <input 
@@ -11,7 +11,7 @@
           v-model.trim="searchQuery" 
           placeholder="책 제목 또는 저자 입력"
         >
-        <button class="btn btn-primary" type="submit" :disabled="isSearching">
+        <button class="btn btn-primary text-nowrap" type="submit" :disabled="isSearching">
           <span v-if="isSearching" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
           <span v-else>검색</span>
         </button>

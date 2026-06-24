@@ -14,7 +14,7 @@
     <div class="p-5 mb-5 bg-light rounded-3 shadow-sm">
       <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <div>
+          <div class="text-start">
             <span class="badge bg-dark mb-2">AI 큐레이션</span>
             <h1 class="display-6 fw-bold">오늘의 추천 도서</h1>
           </div>
@@ -27,7 +27,7 @@
         <!-- 로딩 중 -->
         <div v-if="recommendStore.isLoading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-3 text-muted">AI가 취향을 분석하여 맞춤형 도서를 선별하고 있습니다... (수 초 소요)</p>
+          <p class="mt-3 text-muted">AI가 취향을 분석하여 맞춤형 도서를 선별하고 있습니다...</p>
         </div>
 
         <!-- 에러: 다시 시도 -->
@@ -62,16 +62,16 @@
                     <span class="badge bg-warning text-dark" v-else-if="item.availability?.status === 'loaned'">대출중</span>
                     <span class="badge bg-secondary" v-else>미소장</span>
                   </div>
-                  <p class="card-text text-muted mb-4">{{ item.author }}</p>
+                  <p class="card-text text-muted small mb-4 text-start">{{ item.author }}</p>
                   
-                  <div class="alert alert-secondary border-0 bg-secondary bg-opacity-10 p-3 mb-4 flex-grow-1">
+                  <div class="alert alert-secondary border-0 bg-secondary bg-opacity-10 p-3 mb-4 flex-grow-1 text-start">
                     <p class="mb-1 text-dark fw-bold">왜 이 책인가요?</p>
-                    <p class="mb-0 text-dark">{{ item.reason }}</p>
+                    <p class="mb-0 text-dark text-muted small">{{ item.reason }}</p>
                     <p class="mb-0 mt-2 text-primary" v-if="item.order_note"><small><strong>💡 TIP:</strong> {{ item.order_note }}</small></p>
                   </div>
 
-                  <div v-if="item.similar && item.similar.length > 0" class="mt-auto">
-                    <p class="mb-2 text-muted small fw-bold">비슷한 책 (Read-alike)</p>
+                  <div v-if="item.similar && item.similar.length > 0" class="mt-auto text-start">
+                    <p class="mb-2 text-muted small fw-bold">비슷한 책</p>
                     <div class="d-flex flex-wrap gap-3">
                       <router-link v-for="sim in item.similar" :key="sim.isbn13" :to="`/books/${sim.isbn13}`" class="d-flex align-items-center bg-light rounded p-2 pe-3 text-reset text-decoration-none">
                         <img :src="sim.cover_url || 'https://via.placeholder.com/40x60?text=No'" class="rounded shadow-sm me-3" style="width: 40px; height: 60px; object-fit: cover;" :alt="sim.title">

@@ -1,14 +1,14 @@
 <template>
   <div class="container py-4">
-    <h2>온보딩 & 프로필 설정</h2>
+    <h2 class="text-start fw-bold">프로필 설정</h2>
     
     <div class="row g-4 mt-2">
       <!-- 관심사 설정 섹션 -->
       <div class="col-lg-6">
         <div class="card h-100">
           <div class="card-body">
-            <h4>1. 관심사 선택</h4>
-            <p>자주 읽거나 관심 있는 분야를 선택해주세요. (다중 선택 가능)</p>
+            <h4 class="text-start fs-5 fw-bold">1. 관심사 선택</h4>
+            <p class="text-start mb-4">자주 읽거나 관심 있는 분야를 선택해주세요. (다중 선택 가능)</p>
             
             <div class="d-flex flex-wrap gap-2">
               <button 
@@ -34,8 +34,8 @@
       <div class="col-lg-6">
         <div class="card h-100">
           <div class="card-body">
-            <h4>2. 주 도서관 설정</h4>
-            <p>가장 자주 이용하는 도서관을 검색하고 선택해주세요.</p>
+            <h4 class="text-start fs-5 fw-bold">2. 주 도서관 설정</h4>
+            <p class="text-start mb-4">가장 자주 이용하는 도서관을 검색하고 선택해주세요.</p>
             
             <form @submit.prevent="searchLibraries" class="d-flex gap-2 mb-3">
               <input 
@@ -44,7 +44,7 @@
                 v-model.trim="searchQuery" 
                 placeholder="도서관 이름 (예: 마포)"
               >
-              <button type="submit" class="btn btn-secondary" :disabled="isSearching">
+              <button type="submit" class="btn btn-secondary text-nowrap" :disabled="isSearching">
                 <span v-if="isSearching" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                 <span v-else>검색</span>
               </button>
