@@ -8,6 +8,7 @@ from .llm import select_with_reasons
 from django.db.models import Prefetch
 from books.models import Book, Holding, LoanSignal
 from books.serializers import BookCardSerializer
+from books.availability import refresh_holdings, badge_map
 
 class RecommendationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -39,7 +40,16 @@ class RecommendationView(APIView):
                 "empty": True,
                 "hint": "관심사를 넓히거나 도서관을 추가해 보세요"
             })
-            
+
+        # 3단계: 보여줄 최종 N권만 정보나루 live 가용성 갱신 → 배지 재부착 (⑦c, D33)
+        libraries = list(profile.libraries.all()) or ([profile.primary_library] if profile.primary_library else [])
+        if libraries:
+            isbns = [it['isbn13'] for it in items]
+            refresh_holdings(isbns, libraries)
+            badges = badge_map(isbns, libraries)
+            for it in items:
+                it['availability'] = badges.get(it['isbn13'])
+
         # 정상 반환
         return Response({
             "generated_at": timezone.now().isoformat(),
