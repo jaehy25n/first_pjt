@@ -8,6 +8,9 @@ W_LIKE = 2.0      # 표지픽 좋아요
 W_WISH = 1.0      # 찜 (약한 긍정)
 POP_BONUS = 0.02  # 인기 보충(작게)
 W_EMBED = 10.0    # 내용 임베딩 이웃(co-loan dead-end 보강, sim 0~1 스케일업) (D30)
+POP_BONUS_BEST = 0.015  # 베스트셀러(전국 판매순위) — popular(대출수)보다 약한 콜드스타트 프라이어 (D33 #2)
+AVAIL_BONUS = 0.4       # 선택 도서관에서 '지금 대출가능'이면 동점 우대(게이트 아님, D2 완화 · D33)
+LOANED_BONUS = 0.1      # 소장이나 대출중이면 약간 우대
 
 
 def build_candidates(user, seed_isbn13=None, limit=5):
@@ -31,8 +34,7 @@ def build_candidates(user, seed_isbn13=None, limit=5):
     libraries = list(profile.libraries.all())
     if not libraries and profile.primary_library:
         libraries = [profile.primary_library]
-    if not libraries:
-        return []
+    # 도서관 미선택도 허용 — 가용성은 게이트가 아니라 배지(D33). 취향 ⊥ 도서관(D35).
 
     # 1) 사용자 시드 수집
     # 좋아요=긍정 seed. 찜(wish)은 좋아요로 통합됨 → 별도 분기 제거 (D28)
@@ -80,55 +82,81 @@ def build_candidates(user, seed_isbn13=None, limit=5):
         if contrib > source.get(isbn, (None, -1.0, None))[1]:
             source[isbn] = (best_seed, contrib, 'embed')
 
-    # 4) 부족하면 관심사 / 전체 인기대출로 보충 (낮은 가중)
+    # 4) 인기로 보충 — popular(정보나루 대출수) + bestseller(알라딘 판매순위, 약하게) (D33 #2)
+    #    콜드스타트(seed 없음)·세렌디피티의 backbone. bestseller는 신규 카탈로그를 콜드 경로에 태움.
     interest_prefixes = [it.kdc_prefix for it in user.profile.interests.all() if it.kdc_prefix]
-    for book_id, kdc_code, value in LoanSignal.objects.filter(scope='popular').values_list('book_id', 'book__kdc_code', 'value'):
-        if book_id in exclude:
+
+    def add_popularity(scope, mult, kind):
+        for book_id, kdc_code, value in (LoanSignal.objects.filter(scope=scope)
+                                         .values_list('book_id', 'book__kdc_code', 'value')):
+            if book_id in exclude:
+                continue
+            bonus = mult * (value or 0.0)
+            if interest_prefixes and (kdc_code or '')[:1] in interest_prefixes:
+                bonus += 0.5  # 관심사 분야 약간 가산
+            scores[book_id] = scores.get(book_id, 0.0) + bonus
+            if kind == 'bestseller' and book_id not in source:
+                source[book_id] = (None, bonus, 'bestseller')
+
+    add_popularity('popular', POP_BONUS, 'popular')
+    add_popularity('bestseller', POP_BONUS_BEST, 'bestseller')
+
+    # 5) 가용성 = 하드게이트 아님(D33). 전체 카탈로그에서 점수순으로 뽑고,
+    #    선택 도서관 소장/대출가능은 '배지'로 부착(+ 동점이면 빌릴 수 있는 책 약간 우대).
+    hold_map = {}  # isbn -> (rank: 2=대출가능/1=소장, library_name)
+    if libraries:
+        for h in Holding.objects.filter(library__in=libraries, has_book=True).select_related('library'):
+            rank = 2 if h.loan_available else 1
+            cur = hold_map.get(h.book_id)
+            if not cur or rank > cur[0]:
+                hold_map[h.book_id] = (rank, h.library.name)
+        for isbn, (rank, _) in hold_map.items():
+            if isbn in scores:
+                scores[isbn] += AVAIL_BONUS if rank == 2 else LOANED_BONUS
+
+    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    top_isbns = [isbn for isbn, _ in ranked[: candidate_limit + 30]]
+    book_map = {b.isbn13: b for b in Book.objects.filter(isbn13__in=top_isbns)}
+
+    candidate_list = []
+    for isbn, sc in ranked:
+        if len(candidate_list) >= candidate_limit:
+            break
+        book = book_map.get(isbn)
+        if not book:
             continue
-        bonus = POP_BONUS * (value or 0.0)
-        if interest_prefixes and (kdc_code or '')[:1] in interest_prefixes:
-            bonus += 0.5  # 관심사 분야 약간 가산
-        scores[book_id] = scores.get(book_id, 0.0) + bonus
+        # 가용성 배지 (선택 도서관 기준; 미선택이면 None=배지 없음)
+        if not libraries:
+            availability, library_name = None, ""
+        elif isbn in hold_map:
+            rank, library_name = hold_map[isbn]
+            availability = "available" if rank == 2 else "loaned"
+        else:
+            availability, library_name = "none", ""
 
-    # 5) 선택 도서관 union 가용 필터 + 점수순 정렬 (어디서든 가능하면 후보)
-    def assemble(require_loan_available):
-        out = []
-        for isbn, sc in sorted(scores.items(), key=lambda kv: kv[1], reverse=True):
-            if len(out) >= candidate_limit:
-                break
-            holdings = list(Holding.objects.filter(library__in=libraries, book_id=isbn).select_related('library'))
-            owned = [h for h in holdings if h.has_book]
-            if not owned:
-                continue
-            available = [h for h in owned if h.loan_available]
-            if require_loan_available and not available:
-                continue
-            chosen = available[0] if available else owned[0]  # 빌릴 수 있는 곳 우선
-            book = Book.objects.filter(isbn13=isbn).first()
-            if not book:
-                continue
-            via_isbn, _, kind = source.get(isbn, (None, 0.0, None))
-            via_title = seed_titles.get(via_isbn)
-            if kind == 'coloan' and via_title:
-                signal = "좋아한 '%s'와 함께 많이 빌린 책" % via_title
-            elif kind == 'embed' and via_title:
-                signal = "좋아한 '%s'와 내용이 비슷한 책" % via_title
-            else:
-                signal = "도서관 인기 대출 도서"
-            out.append({
-                "isbn13": isbn,
-                "title": book.title,
-                "author": book.author,
-                "kdc_code": book.kdc_code,
-                "via_isbn13": via_isbn,
-                "via_title": via_title,
-                "signal": signal,
-                "library_name": chosen.library.name,
-                "score": round(sc, 3),
-            })
-        return out
+        via_isbn, _, kind = source.get(isbn, (None, 0.0, None))
+        via_title = seed_titles.get(via_isbn)
+        if kind == 'coloan' and via_title:
+            signal = "좋아한 '%s'와 함께 많이 빌린 책" % via_title
+        elif kind == 'embed' and via_title:
+            signal = "좋아한 '%s'와 내용이 비슷한 책" % via_title
+        elif kind == 'bestseller':
+            signal = "요즘 많이 읽히는 책"
+        else:
+            signal = "도서관 인기 대출 도서"
 
-    candidate_list = assemble(require_loan_available=True) or assemble(require_loan_available=False)
+        candidate_list.append({
+            "isbn13": isbn,
+            "title": book.title,
+            "author": book.author,
+            "kdc_code": book.kdc_code,
+            "via_isbn13": via_isbn,
+            "via_title": via_title,
+            "signal": signal,
+            "library_name": library_name,
+            "availability": availability,
+            "score": round(sc, 3),
+        })
 
     # 식별 번호(n) 부여 (R-2가 번호로 선별 → 환각 차단)
     for idx, cand in enumerate(candidate_list, 1):
