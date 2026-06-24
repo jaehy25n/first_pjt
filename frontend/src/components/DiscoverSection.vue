@@ -11,8 +11,15 @@
     </p>
 
     <!-- 도서관 미선택 등 빈 상태 -->
-    <div v-if="empty" class="alert alert-info border-0 shadow-sm">
-      {{ hint }}
+    <div v-if="empty" class="alert alert-info border-0 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>{{ hint }}</span>
+      <router-link to="/onboarding" class="btn btn-outline-primary btn-sm">도서관 고르기</router-link>
+    </div>
+
+    <!-- 에러: 다시 시도 -->
+    <div v-else-if="error" class="alert alert-danger border-0 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>책을 불러오는 중 문제가 생겼어요.</span>
+      <button class="btn btn-outline-danger btn-sm" @click="fetchSpread">다시 시도</button>
     </div>
 
     <template v-else>
@@ -73,6 +80,7 @@ const picks = ref([])   // 누적 선택 isbn
 const seen = ref([])    // 누적으로 보여준 isbn
 const loading = ref(false)
 const empty = ref(false)
+const error = ref(false)
 const hint = ref('')
 
 const isPicked = (isbn) => picks.value.includes(isbn)
@@ -85,6 +93,7 @@ const togglePick = (isbn) => {
 
 const fetchSpread = async () => {
   loading.value = true
+  error.value = false
   try {
     const res = await axiosInstance.post('/api/discover', { picks: picks.value, seen: seen.value })
     if (res.data.empty) {
@@ -98,6 +107,7 @@ const fetchSpread = async () => {
     books.value = next
   } catch (e) {
     console.error('발견 로드 실패:', e)
+    error.value = true
     books.value = []
   } finally {
     loading.value = false
