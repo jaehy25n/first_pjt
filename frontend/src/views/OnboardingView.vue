@@ -6,51 +6,6 @@
       <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
     </p>
 
-    <div class="mb-4">
-      <label class="form-label small fw-semibold mb-2">
-        이용할 도서관을 골라주세요 <span class="text-secondary">(선택 · 여러 곳 가능)</span>
-        <span class="text-muted">— 고른 도서관의 '지금 대출 가능' 여부가 책에 배지로 표시돼요 (나중에 추가해도 돼요)</span>
-      </label>
-      <div v-if="selectedLibs.length > 0" class="d-flex flex-wrap gap-2 mb-2">
-        <button
-          v-for="code in selectedLibs"
-          :key="code"
-          type="button"
-          class="btn btn-sm btn-primary"
-          @click="toggleLib({ lib_code: code, name: selectedMeta[code] })"
-        >{{ selectedMeta[code] }} ✕</button>
-      </div>
-
-      <div class="d-flex flex-wrap gap-2 mb-2">
-        <button type="button" class="btn btn-sm btn-outline-primary" :disabled="locating" @click="findNearby">
-          📍 {{ locating ? '위치 확인 중…' : '내 근처 도서관 찾기' }}
-        </button>
-        <input
-          v-model="searchQ"
-          type="text"
-          class="form-control form-control-sm"
-          style="max-width: 220px;"
-          placeholder="또는 도서관 이름 검색"
-          @keyup.enter="searchLibs"
-        />
-      </div>
-      <div v-if="libError" class="text-muted small mb-2">{{ libError }}</div>
-
-      <div v-if="nearbyLibs.length > 0" class="list-group">
-        <button
-          v-for="lib in nearbyLibs"
-          :key="lib.lib_code"
-          type="button"
-          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-          :class="{ active: selectedLibs.includes(lib.lib_code) }"
-          @click="toggleLib(lib)"
-        >
-          <span>{{ lib.name }} <small class="text-muted">{{ lib.address }}</small></span>
-          <small v-if="lib.distance_km != null" class="text-nowrap">{{ lib.distance_km }}km</small>
-        </button>
-      </div>
-    </div>
-
     <div v-if="loading" class="text-center my-5 text-muted">
       <div class="spinner-border text-secondary" role="status"></div>
       <p class="mt-2">책을 불러오는 중…</p>
@@ -136,12 +91,6 @@ const seen = ref(new Set()) // 이미 보여준 isbn (반복정제 중복 방지
 const goal = ref('')
 const loading = ref(true)
 const submitting = ref(false)
-const selectedLibs = ref([])     // lib_code 배열 (제출용)
-const selectedMeta = ref({})     // lib_code -> name (선택 칩 표시용)
-const nearbyLibs = ref([])       // 근처/검색 결과
-const locating = ref(false)
-const libError = ref('')
-const searchQ = ref('')
 
 const likedCount = computed(
   () => Object.values(picks.value).filter((v) => v === 'like').length
@@ -164,59 +113,6 @@ const fetchBooks = async () => {
     books.value = []
   } finally {
     loading.value = false
-  }
-}
-
-const toggleLib = (lib) => {
-  const code = lib.lib_code
-  const i = selectedLibs.value.indexOf(code)
-  if (i === -1) {
-    selectedLibs.value.push(code)
-    selectedMeta.value[code] = lib.name
-  } else {
-    selectedLibs.value.splice(i, 1)
-  }
-}
-
-const findNearby = () => {
-  libError.value = ''
-  if (!navigator.geolocation) {
-    libError.value = '이 브라우저는 위치를 지원하지 않아요. 이름으로 검색해 주세요.'
-    return
-  }
-  locating.value = true
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      try {
-        const res = await axiosInstance.get('/api/libraries/nearby/', {
-          params: { lat: pos.coords.latitude, lng: pos.coords.longitude, n: 10 },
-        })
-        nearbyLibs.value = res.data.libraries || []
-        if (nearbyLibs.value.length === 0) libError.value = '근처 도서관을 찾지 못했어요.'
-      } catch (e) {
-        libError.value = '근처 도서관을 불러오지 못했어요.'
-      } finally {
-        locating.value = false
-      }
-    },
-    () => {
-      locating.value = false
-      libError.value = '위치 권한이 꺼져 있어요. 이름으로 검색해 주세요.'
-    },
-    { timeout: 8000 }
-  )
-}
-
-const searchLibs = async () => {
-  const q = searchQ.value.trim()
-  if (!q) return
-  libError.value = ''
-  try {
-    const res = await axiosInstance.get('/api/libraries/', { params: { q } })
-    nearbyLibs.value = res.data || []
-    if (nearbyLibs.value.length === 0) libError.value = '검색 결과가 없어요.'
-  } catch (e) {
-    libError.value = '검색에 실패했어요.'
   }
 }
 
@@ -246,10 +142,6 @@ const submit = async () => {
   const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
   const topics = goal.value.trim() ? [goal.value.trim()] : []
   try {
-    // 선택 도서관들 먼저 저장(추천이 이 도서관들 기준) → 취향 저장
-    if (selectedLibs.value.length > 0) {
-      await axiosInstance.patch('/api/profile/onboarding/', { library_codes: selectedLibs.value })
-    }
     await axiosInstance.post('/api/onboarding/taste', { liked, topics })
     router.push({ name: 'home' })
   } catch (e) {
