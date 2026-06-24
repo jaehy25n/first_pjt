@@ -89,9 +89,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 취향 발견 (반복정제) -->
-    <DiscoverSection />
     </template>
 
   </div>
@@ -99,7 +96,6 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import DiscoverSection from '@/components/DiscoverSection.vue'
 import { useRecommendStore } from '@/stores/recommend'
 import { useAccountStore } from '@/stores/accounts'
 
