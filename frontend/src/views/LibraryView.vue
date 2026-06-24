@@ -48,7 +48,7 @@
             <p>아직 좋아요한 책이 없습니다.</p>
             <router-link to="/search" class="btn btn-outline-primary mt-2">책 탐색하기</router-link>
           </div>
-          <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+          <div v-else class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
             <div class="col" v-for="book in libraryStore.likedList" :key="book.isbn13">
               <BookCard :book="book" />
             </div>
@@ -61,7 +61,7 @@
             <i class="bi bi-book fs-1 mb-3 d-block"></i>
             <p>현재 읽고 있는 책이 없습니다.</p>
           </div>
-          <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+          <div v-else class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
             <div class="col" v-for="book in libraryStore.readingList" :key="book.isbn13">
               <BookCard :book="book" />
             </div>
@@ -74,7 +74,7 @@
             <i class="bi bi-check-circle fs-1 mb-3 d-block"></i>
             <p>아직 완독한 책이 없습니다.</p>
           </div>
-          <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+          <div v-else class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
             <div class="col" v-for="book in libraryStore.finishedList" :key="book.isbn13">
               <!-- 완독 탭의 경우 별점이 있으면 카드에 작게 표시해주는 것도 좋지만, 기본 BookCard 활용 -->
               <div class="position-relative h-100">

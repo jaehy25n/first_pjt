@@ -20,9 +20,6 @@
               <li class="nav-item" v-if="store.isLogin">
                 <router-link to="/library" class="nav-link" active-class="active">내 서재</router-link>
               </li>
-              <li class="nav-item" v-if="store.isLogin">
-                <router-link to="/profile" class="nav-link" active-class="active">프로필</router-link>
-              </li>
             </ul>
             <div class="d-flex align-items-center mt-2 mt-md-0">
               <template v-if="!store.isLogin">

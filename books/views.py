@@ -1,10 +1,13 @@
+import math
+
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Prefetch, Q
 from .models import Library, Book, Holding
-from .serializers import LibrarySearchSerializer, BookCardSerializer, BookDetailSerializer, HoldingSerializer
+from .serializers import LibrarySearchSerializer, BookCardSerializer, BookDetailSerializer
+from .availability import book_usage, borrow_map
 from accounts.models import Profile
 
 class LibraryListView(APIView):
@@ -61,8 +64,58 @@ class BookDetailView(RetrieveAPIView):
     serializer_class = BookDetailSerializer
     lookup_field = 'isbn13'
 
-class BookAvailabilityView(APIView):
+class BookUsageView(APIView):
+    """책 이용분석 — 연관 키워드 + 월별 대출 추이 (usageAnalysisList lazy 1콜). ⑧, D33 정보나루 B."""
     def get(self, request, isbn13):
-        holdings = Holding.objects.filter(book__isbn13=isbn13).select_related('library')
-        serializer = HoldingSerializer(holdings, many=True)
-        return Response(serializer.data)
+        return Response(book_usage(isbn13))
+
+
+class BorrowMapView(APIView):
+    """책 상세 '빌릴 수 있는 도서관' 지도 (D36). 소장관(libSrchByBook) + 내 위치 가까운 N개관 live 상태 + 인근 미소장(회색).
+    lat/lng 없으면 위치 없는 모드(소장관만, live 0). n=가까운 소장관 중 live 확인 수(기본 8, 상한 10)."""
+    def get(self, request, isbn13):
+        def _f(key):
+            try:
+                return float(request.query_params.get(key))
+            except (TypeError, ValueError):
+                return None
+        try:
+            n = min(10, max(0, int(request.query_params.get('n', 8))))
+        except (TypeError, ValueError):
+            n = 8
+        return Response(borrow_map(isbn13, _f('lat'), _f('lng'), live_n=n))
+
+
+class LibraryNearbyView(APIView):
+    """내 위치(lat,lng) 기준 가까운 도서관 N개 — Haversine 거리정렬 (D34 Tier1). 외부 API 없음."""
+    def get(self, request):
+        try:
+            lat = float(request.query_params.get('lat'))
+            lng = float(request.query_params.get('lng'))
+        except (TypeError, ValueError):
+            return Response({"detail": "lat, lng 쿼리 파라미터가 필요합니다."}, status=400)
+        try:
+            n = min(50, max(1, int(request.query_params.get('n', 10))))
+        except (TypeError, ValueError):
+            n = 10
+
+        def haversine(la1, lo1, la2, lo2):
+            R = 6371.0  # km
+            p1, p2 = math.radians(la1), math.radians(la2)
+            dphi = math.radians(la2 - la1)
+            dlmb = math.radians(lo2 - lo1)
+            a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
+            return 2 * R * math.asin(math.sqrt(a))
+
+        out = []
+        for lib in Library.objects.filter(latitude__isnull=False, longitude__isnull=False):
+            out.append({
+                "lib_code": lib.lib_code,
+                "name": lib.name,
+                "address": lib.address,
+                "latitude": lib.latitude,
+                "longitude": lib.longitude,
+                "distance_km": round(haversine(lat, lng, lib.latitude, lib.longitude), 2),
+            })
+        out.sort(key=lambda x: x["distance_km"])
+        return Response({"count": min(n, len(out)), "libraries": out[:n]})
