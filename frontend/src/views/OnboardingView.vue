@@ -30,7 +30,7 @@
     </div>
 
     <div v-else-if="books.length === 0" class="text-center my-5 text-muted">
-      <p>표시할 책이 없어요. 백엔드에서 <code>load_popularity</code>를 실행했는지 확인해주세요.</p>
+      <p>표시할 책이 없어요.</p>
       <button class="btn btn-outline-secondary btn-sm" @click="reshuffle">다시 시도</button>
     </div>
 
@@ -45,7 +45,7 @@
               @error="onImgError"
             />
             <div class="card-body p-2 d-flex flex-column">
-              <span class="badge bg-light text-dark align-self-start mb-1">{{ book.kdc_label }}</span>
+              <span v-if="kdcLabel(book.kdc_code)" class="badge bg-light text-dark align-self-start mb-1">{{ kdcLabel(book.kdc_code) }}</span>
               <p class="small fw-semibold mb-2 flex-grow-1 title-clamp">{{ book.title }}</p>
               <button
                 type="button"
@@ -59,7 +59,7 @@
       </div>
 
       <div class="d-flex justify-content-between align-items-center mt-3">
-        <button class="btn btn-link text-decoration-none" @click="reshuffle">🔄 다른 책 보기</button>
+        <button class="btn btn-link text-decoration-none" @click="reshuffle">{{ likedCount > 0 ? '🔄 비슷한 책 더 보기' : '🔄 다른 책 보기' }}</button>
         <small class="text-muted">좋아요 {{ likedCount }}</small>
       </div>
 
@@ -97,9 +97,15 @@ import axiosInstance from '@/api/axios'
 
 const router = useRouter()
 
+const KDC_LABELS = {
+  '0': '총류', '1': '철학', '2': '종교', '3': '사회과학', '4': '자연과학',
+  '5': '기술과학', '6': '예술', '7': '언어', '8': '문학', '9': '역사',
+}
+const kdcLabel = (code) => KDC_LABELS[(code || '').trim()[0]] || ''
+
 const books = ref([])
 const picks = ref({}) // isbn13 -> 'like'
-const round = ref(0)
+const seen = ref(new Set()) // 이미 보여준 isbn (반복정제 중복 방지)
 const goal = ref('')
 const loading = ref(true)
 const submitting = ref(false)
@@ -110,15 +116,20 @@ const likedCount = computed(
   () => Object.values(picks.value).filter((v) => v === 'like').length
 )
 
+// 반복정제 발견(D35): 좋아요한 책(picks)을 seed로 비슷한 책을, 없으면 인기순 흩뿌리기.
 const fetchBooks = async () => {
   loading.value = true
   try {
-    const res = await axiosInstance.get('/api/onboarding/starter-books', {
-      params: { round: round.value },
+    const liked = Object.keys(picks.value).filter((i) => picks.value[i] === 'like')
+    const res = await axiosInstance.post('/api/discover', {
+      picks: liked,
+      seen: [...seen.value],
     })
-    books.value = res.data.books || []
+    const next = res.data.books || []
+    next.forEach((b) => seen.value.add(b.isbn13))
+    books.value = next
   } catch (e) {
-    console.error('스타터셋 불러오기 실패:', e)
+    console.error('책 불러오기 실패:', e)
     books.value = []
   } finally {
     loading.value = false
@@ -155,7 +166,6 @@ const cardClass = (isbn) => {
 }
 
 const reshuffle = () => {
-  round.value += 1
   fetchBooks()
 }
 
