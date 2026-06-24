@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.db.models import Prefetch, Q
 from .models import Library, Book, Holding
 from .serializers import LibrarySearchSerializer, BookCardSerializer, BookDetailSerializer, HoldingSerializer
-from .availability import refresh_holdings, libs_for_book
+from .availability import refresh_holdings, libs_for_book, book_usage
 from accounts.models import Profile
 
 class LibraryListView(APIView):
@@ -83,3 +83,9 @@ class BookSeoulLibrariesView(APIView):
     def get(self, request, isbn13):
         libs = libs_for_book(isbn13)
         return Response({"count": len(libs), "libraries": libs})
+
+
+class BookUsageView(APIView):
+    """책 이용분석 — 연관 키워드 + 월별 대출 추이 (usageAnalysisList lazy 1콜). ⑧, D33 정보나루 B."""
+    def get(self, request, isbn13):
+        return Response(book_usage(isbn13))

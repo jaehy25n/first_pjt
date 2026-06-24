@@ -7,4 +7,5 @@ urlpatterns = [
     path('books/<str:isbn13>/', views.BookDetailView.as_view(), name='book_detail'),
     path('books/<str:isbn13>/availability/', views.BookAvailabilityView.as_view(), name='book_availability'),
     path('books/<str:isbn13>/seoul-libraries/', views.BookSeoulLibrariesView.as_view(), name='book_seoul_libraries'),
+    path('books/<str:isbn13>/usage/', views.BookUsageView.as_view(), name='book_usage'),
 ]
