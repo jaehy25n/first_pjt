@@ -14,11 +14,22 @@
         <!-- 1단: 표지 및 기본 정보 (좌측) -->
         <div class="col-md-4 mb-4">
           <div class="card">
-            <img 
-              :src="book.cover_url || 'https://via.placeholder.com/300x400?text=No+Cover'" 
-              class="card-img-top img-fluid" 
-              alt="book cover"
-            >
+            <div class="position-relative">
+              <img
+                :src="book.cover_url || 'https://via.placeholder.com/300x400?text=No+Cover'"
+                class="card-img-top img-fluid"
+                alt="book cover"
+              >
+              <button
+                v-if="accountStore.isLogin"
+                type="button"
+                class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 like-btn"
+                :title="isLiked ? '좋아요 취소' : '좋아요'"
+                @click="onToggleLike"
+              >
+                <i class="bi" :class="isLiked ? 'bi-heart-fill text-danger' : 'bi-heart'"></i>
+              </button>
+            </div>
             <div class="card-body">
               <p class="mb-1"><strong>저자:</strong> {{ book.author }}</p>
               <p class="mb-1"><strong>출판사:</strong> {{ book.publisher }}</p>
@@ -118,6 +129,11 @@ const setStatus = async (value) => {
   }
 }
 
+const isLiked = computed(() => libraryStore.checkIsLiked(isbn13))
+const onToggleLike = () => {
+  if (book.value) libraryStore.toggleLike(isbn13, book.value)
+}
+
 const fetchUsage = async () => {
   try {
     const res = await axiosInstance.get(`/api/books/${isbn13}/usage/`)
@@ -180,4 +196,13 @@ onMounted(async () => {
   transition: color 0.25s ease;
 }
 .read-slider-opt.active { color: #fff; font-weight: 600; }
+.like-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
 </style>
