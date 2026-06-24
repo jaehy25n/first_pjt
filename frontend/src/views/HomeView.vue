@@ -45,26 +45,26 @@
 
         <!-- 추천 결과 -->
         <div v-else-if="recommendStore.isLoaded && recommendStore.recommendations.length > 0">
-          <div v-for="item in recommendStore.recommendations" :key="item.isbn13" class="card mb-4 border-0 shadow-sm overflow-hidden">
+          <div v-for="item in recommendStore.recommendations" :key="item.isbn13" class="card mb-3 border-0 shadow-sm overflow-hidden">
             <div class="row g-0">
               <div class="col-md-3 bg-secondary bg-opacity-10 d-flex justify-content-center align-items-center p-3">
                 <router-link :to="`/books/${item.isbn13}`">
-                  <img :src="item.cover_url || 'https://via.placeholder.com/150x200?text=No+Cover'" class="img-fluid rounded shadow" :alt="item.title" style="max-height: 250px; object-fit: cover;">
+                  <img :src="item.cover_url || 'https://via.placeholder.com/150x200?text=No+Cover'" class="img-fluid rounded shadow" :alt="item.title" style="max-height: 180px; object-fit: cover;">
                 </router-link>
               </div>
               <div class="col-md-9">
-                <div class="card-body h-100 d-flex flex-column p-4">
+                <div class="card-body h-100 d-flex flex-column p-3">
                   <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h4 class="card-title fw-bold mb-0">
+                    <h5 class="card-title fw-bold mb-0">
                       <router-link :to="`/books/${item.isbn13}`" class="text-reset text-decoration-none">{{ item.title }}</router-link>
-                    </h4>
+                    </h5>
                     <span class="badge bg-success" v-if="item.availability?.status === 'available'">대출가능</span>
                     <span class="badge bg-warning text-dark" v-else-if="item.availability?.status === 'loaned'">대출중</span>
                     <span class="badge bg-secondary" v-else>미소장</span>
                   </div>
-                  <p class="card-text text-muted mb-4">{{ item.author }}</p>
-                  
-                  <div class="alert alert-secondary border-0 bg-secondary bg-opacity-10 p-3 mb-4 flex-grow-1">
+                  <p class="card-text text-muted mb-2">{{ item.author }}</p>
+
+                  <div class="alert alert-secondary border-0 bg-secondary bg-opacity-10 p-3 mb-3 flex-grow-1">
                     <p class="mb-1 text-dark fw-bold">왜 이 책인가요?</p>
                     <p class="mb-0 text-dark">{{ item.reason }}</p>
                     <p class="mb-0 mt-2 text-primary" v-if="item.order_note"><small><strong>💡 TIP:</strong> {{ item.order_note }}</small></p>
