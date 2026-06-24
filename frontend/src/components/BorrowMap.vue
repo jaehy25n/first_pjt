@@ -26,7 +26,6 @@
       <span><span class="dot" style="background:#2e9e44"></span> 대출 가능</span>
       <span><span class="dot" style="background:#f4b400"></span> 대출 중</span>
       <span><span class="dot" style="background:#5c6bc0"></span> 소장(상태 미확인)</span>
-      <span><span class="dot" style="background:#bdbdbd"></span> 미소장</span>
       <span><span class="dot" style="background:#1976d2;border:2px solid #fff;box-shadow:0 0 0 1px #1976d2"></span> 내 위치</span>
       <span class="text-muted ms-auto" v-if="!loading">
         서울 소장 {{ holdingCount }}곳<span v-if="hasLocation"> · 가까운 {{ liveChecked }}곳 실시간 확인</span>
@@ -54,7 +53,6 @@ const STATUS = {
   available:    { fill: '#2e9e44', stroke: '#1b7a33', label: '대출 가능' },
   loaned:       { fill: '#f4b400', stroke: '#b8860b', label: '대출 중' },
   held_unknown: { fill: '#5c6bc0', stroke: '#3949ab', label: '소장(상태 미확인)' },
-  none:         { fill: '#bdbdbd', stroke: '#757575', label: '미소장' },
 }
 const SEOUL = [37.5665, 126.9780]
 
@@ -75,7 +73,7 @@ let userMarker = null
 let userLatLng = null
 
 const initMap = () => {
-  map = L.map(mapEl.value, { scrollWheelZoom: false }).setView(SEOUL, 12)
+  map = L.map(mapEl.value, { scrollWheelZoom: true }).setView(SEOUL, 12)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
@@ -105,13 +103,14 @@ const fetchAndRender = async (lat = null, lng = null) => {
 const renderMarkers = (libraries) => {
   if (!map) return
   libLayer.clearLayers()
-  const pts = []
+  const holdingPts = [] // 소장관 좌표 (거리순). 미소장(none)은 제외.
 
   for (const lib of libraries) {
+    if (lib.status === 'none') continue // 미소장은 표시하지 않음
     if (lib.latitude == null || lib.longitude == null) continue
-    const s = STATUS[lib.status] || STATUS.none
+    const s = STATUS[lib.status] || STATUS.held_unknown
     const ll = [lib.latitude, lib.longitude]
-    pts.push(ll)
+    holdingPts.push(ll)
     const dist = lib.distance_km != null ? ` · ${lib.distance_km}km` : ''
     L.circleMarker(ll, {
       radius: 7, weight: 2, color: s.stroke, fillColor: s.fill, fillOpacity: 0.9,
@@ -128,13 +127,21 @@ const renderMarkers = (libraries) => {
       icon: L.divIcon({ className: 'user-pin', html: '<div class="user-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }),
       zIndexOffset: 1000,
     }).bindPopup('내 위치').addTo(map)
-    pts.push(userLatLng)
   }
 
-  if (pts.length > 1) {
-    map.fitBounds(L.latLngBounds(pts).pad(0.2), { maxZoom: 15 })
-  } else if (pts.length === 1) {
-    map.setView(pts[0], 14)
+  // 줌: 위치를 주면(검색/내위치) 그 지점 중심으로 적당히 확대 = 내 위치 + 가장 가까운 소장관.
+  //     위치가 없으면 소장관 전체가 보이게.
+  if (userLatLng) {
+    const nearest = holdingPts[0] // libraries는 거리순 → 첫 소장 마커가 최근접
+    if (nearest) {
+      map.fitBounds(L.latLngBounds([userLatLng, nearest]).pad(0.5), { maxZoom: 12 })
+    } else {
+      map.setView(userLatLng, 12)
+    }
+  } else if (holdingPts.length > 1) {
+    map.fitBounds(L.latLngBounds(holdingPts).pad(0.2), { maxZoom: 15 })
+  } else if (holdingPts.length === 1) {
+    map.setView(holdingPts[0], 14)
   }
 }
 
