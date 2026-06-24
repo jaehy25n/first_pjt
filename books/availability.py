@@ -1,0 +1,119 @@
+"""정보나루 온디맨드 가용성 (⑦c, D33) — 런타임 lazy 조회 + Holding TTL 캐시.
+
+화면에 보이는 소수 책 × 선택 도서관만 bookExist로 확인하고, Holding을 snapshot_at TTL로
+재사용(반복호출·throttle 방지). 책 상세는 libSrchByBook(region=11)로 서울 소장관 목록.
+호출 실패/throttle 시 조용히 폴백(갱신 생략 = 기존 캐시 유지 / 없으면 '확인 불가').
+
+엔드포인트 스펙(실측 2026-06-24):
+  bookExist     {authKey, libCode, isbn13, format} → response.result.{hasBook,loanAvailable} (Y/N)
+  libSrchByBook {authKey, isbn,  region,  format} → response.libs[].lib.{libCode,libName,address,latitude,longitude,...}
+  ※ 파라미터명 주의: bookExist=isbn13, libSrchByBook=isbn
+"""
+import os
+from datetime import timedelta
+
+import requests
+from django.utils import timezone
+
+from .models import Holding
+
+BOOK_EXIST_URL = "http://data4library.kr/api/bookExist"
+LIB_BY_BOOK_URL = "http://data4library.kr/api/libSrchByBook"
+
+HOLDING_TTL = timedelta(hours=6)      # 이보다 오래된 Holding만 재조회 (데모용·조절 가능)
+MAX_CALLS_PER_REQUEST = 20            # 한 요청에서 bookExist 최대 호출 수 (지연·throttle 방어)
+
+
+def _get(url, params, timeout=8):
+    """정보나루 GET → response(dict). 키 없음/HTTP·본문 에러/throttle이면 None(조용히 폴백)."""
+    key = os.environ.get("LIBRARY_API_KEY")
+    if not key:
+        return None
+    try:
+        r = requests.get(url, params={**params, "authKey": key, "format": "json"}, timeout=timeout)
+        r.raise_for_status()
+        data = r.json()
+        resp = data.get("response", {}) if isinstance(data, dict) else {}
+        if isinstance(resp, dict) and not resp.get("error"):
+            return resp
+    except (requests.exceptions.RequestException, ValueError):
+        pass
+    return None
+
+
+def refresh_holdings(isbns, libraries, ttl=HOLDING_TTL):
+    """보여줄 책(isbns) × 선택 도서관(libraries)의 Holding을 TTL 기준으로 갱신(upsert).
+    최근 snapshot_at(<ttl)인 조합은 호출 생략, 미보유/만료분만 bookExist 1콜씩(상한 적용).
+    호출부는 이후 Holding을 다시 읽으면 됨. 실패분은 건너뜀(기존 값/없음 유지 = 폴백)."""
+    isbns = [i for i in isbns if i]
+    if not isbns or not libraries:
+        return
+    fresh_after = timezone.now() - ttl
+    fresh = set(
+        Holding.objects
+        .filter(library__in=libraries, book_id__in=isbns, snapshot_at__gte=fresh_after)
+        .values_list('library_id', 'book_id')
+    )
+    calls = 0
+    for lib in libraries:
+        for isbn in isbns:
+            if (lib.id, isbn) in fresh:
+                continue
+            if calls >= MAX_CALLS_PER_REQUEST:
+                return
+            resp = _get(BOOK_EXIST_URL, {"libCode": lib.lib_code, "isbn13": isbn})
+            calls += 1
+            if resp is None:
+                continue  # 실패 → 기존 Holding 유지(또는 없음). 배지는 폴백.
+            result = resp.get("result", {})
+            Holding.objects.update_or_create(
+                library=lib, book_id=isbn,
+                defaults={
+                    "has_book": result.get("hasBook") == "Y",
+                    "loan_available": result.get("loanAvailable") == "Y",
+                },
+            )
+
+
+def badge_map(isbns, libraries):
+    """보여줄 책 × 선택 도서관의 가용성 배지 {isbn: {'library_name','status'}}.
+    status: available(대출가능) > loaned(소장·대출중) > none(미소장). 도서관 미선택이면 {}(→배지 null).
+    build_candidates와 같은 어휘·우선순위 (D33). refresh_holdings 직후 호출하면 fresh 값."""
+    if not isbns or not libraries:
+        return {}
+    held = {}
+    for h in (Holding.objects
+              .filter(library__in=libraries, book_id__in=isbns, has_book=True)
+              .select_related('library')):
+        rank = 2 if h.loan_available else 1
+        cur = held.get(h.book_id)
+        if not cur or rank > cur[0]:
+            held[h.book_id] = (rank, h.library.name)
+    out = {}
+    for isbn in isbns:
+        if isbn in held:
+            rank, name = held[isbn]
+            out[isbn] = {"library_name": name, "status": "available" if rank == 2 else "loaned"}
+        else:
+            out[isbn] = {"library_name": "", "status": "none"}
+    return out
+
+
+def libs_for_book(isbn, region="11"):
+    """책 1권의 (서울) 소장 도서관 목록 — libSrchByBook. [{lib_code,name,address,latitude,longitude}] · 실패 시 []."""
+    if not isbn:
+        return []
+    resp = _get(LIB_BY_BOOK_URL, {"isbn": isbn, "region": region})
+    if not resp:
+        return []
+    out = []
+    for item in resp.get("libs", []) or []:
+        lib = item.get("lib", {}) if isinstance(item, dict) else {}
+        out.append({
+            "lib_code": lib.get("libCode"),
+            "name": lib.get("libName"),
+            "address": lib.get("address"),
+            "latitude": lib.get("latitude"),
+            "longitude": lib.get("longitude"),
+        })
+    return out
