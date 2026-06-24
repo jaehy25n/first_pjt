@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.db.models import Prefetch, Q
 from .models import Library, Book, Holding
 from .serializers import LibrarySearchSerializer, BookCardSerializer, BookDetailSerializer, HoldingSerializer
-from .availability import refresh_holdings, libs_for_book, book_usage
+from .availability import refresh_holdings, libs_for_book, book_usage, borrow_map
 from accounts.models import Profile
 
 class LibraryListView(APIView):
@@ -91,6 +91,22 @@ class BookUsageView(APIView):
     """책 이용분석 — 연관 키워드 + 월별 대출 추이 (usageAnalysisList lazy 1콜). ⑧, D33 정보나루 B."""
     def get(self, request, isbn13):
         return Response(book_usage(isbn13))
+
+
+class BorrowMapView(APIView):
+    """책 상세 '빌릴 수 있는 도서관' 지도 (D36). 소장관(libSrchByBook) + 내 위치 가까운 N개관 live 상태 + 인근 미소장(회색).
+    lat/lng 없으면 위치 없는 모드(소장관만, live 0). n=가까운 소장관 중 live 확인 수(기본 8, 상한 10)."""
+    def get(self, request, isbn13):
+        def _f(key):
+            try:
+                return float(request.query_params.get(key))
+            except (TypeError, ValueError):
+                return None
+        try:
+            n = min(10, max(0, int(request.query_params.get('n', 8))))
+        except (TypeError, ValueError):
+            n = 8
+        return Response(borrow_map(isbn13, _f('lat'), _f('lng'), live_n=n))
 
 
 class LibraryNearbyView(APIView):
