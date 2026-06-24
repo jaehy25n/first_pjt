@@ -82,6 +82,23 @@
               등록된 도서관 중 이 책을 소장한 곳이 없습니다.
             </div>
           </div>
+
+          <hr class="my-4">
+
+          <div>
+            <h5 class="mb-3">이 책이 있는 서울 도서관</h5>
+            <div v-if="seoulLoading" class="text-muted small">서울 도서관 소장 정보를 불러오는 중…</div>
+            <div v-else-if="seoulLibraries.length > 0">
+              <p class="text-muted small mb-2">서울 전역 {{ seoulLibraries.length }}곳에서 소장 중</p>
+              <div class="list-group">
+                <div v-for="lib in seoulLibraries" :key="lib.lib_code" class="list-group-item">
+                  <h6 class="mb-0">{{ lib.name }}</h6>
+                  <small class="text-muted">{{ lib.address }}</small>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-muted small">소장 도서관 정보를 확인할 수 없어요.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -103,6 +120,8 @@ const libraryStore = useLibraryStore()
 
 const book = ref(null)
 const availabilities = ref([])
+const seoulLibraries = ref([])
+const seoulLoading = ref(true)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
@@ -131,10 +150,22 @@ const setStatus = async (value) => {
   }
 }
 
+const fetchSeoulLibraries = async () => {
+  try {
+    const res = await axiosInstance.get(`/api/books/${isbn13}/seoul-libraries/`)
+    seoulLibraries.value = res.data.libraries || []
+  } catch (e) {
+    seoulLibraries.value = []
+  } finally {
+    seoulLoading.value = false
+  }
+}
+
 onMounted(async () => {
   if (accountStore.isLogin && !libraryStore.isLoaded) {
     libraryStore.fetchLibrary()
   }
+  fetchSeoulLibraries() // 서울 소장관 목록은 비동기로(메인 로드 막지 않게)
   try {
     // 도서 기본 상세 정보 및 가용성 동시 호출
     const [bookRes, availRes] = await Promise.all([
