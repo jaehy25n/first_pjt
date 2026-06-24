@@ -1,11 +1,13 @@
 from books.models import Book, Holding, CoLoan, LoanSignal
 from accounts.models import BookPreference, ReadingLog
+from .similarity import similar_books
 
 # 긍정 seed 가중치
 W_SEED = 3.0      # 선택/완독한 책 (즉시 맥락)
 W_LIKE = 2.0      # 표지픽 좋아요
 W_WISH = 1.0      # 찜 (약한 긍정)
 POP_BONUS = 0.02  # 인기 보충(작게)
+W_EMBED = 10.0    # 내용 임베딩 이웃(co-loan dead-end 보강, sim 0~1 스케일업) (D30)
 
 
 def build_candidates(user, seed_isbn13=None, limit=5):
@@ -57,17 +59,26 @@ def build_candidates(user, seed_isbn13=None, limit=5):
         if dis_authors:
             exclude |= set(Book.objects.filter(author__in=dis_authors).values_list('isbn13', flat=True))
 
-    # 3) 긍정 seed → CoLoan 이웃 점수 누적 (+ 출처 seed 기록)
+    # 3) 긍정 seed → CoLoan 이웃 점수 누적 (+ 출처 seed·종류 기록)
     scores = {}   # isbn -> 누적 점수
-    source = {}   # isbn -> (출처 seed isbn, 그 기여도)
+    source = {}   # isbn -> (출처 seed isbn, 기여도, 종류: 'coloan'/'embed')
     for seed, weight in positive:
         for co_book_id, score in CoLoan.objects.filter(book_id=seed).values_list('co_book_id', 'score'):
             if co_book_id in exclude:
                 continue
             contrib = weight * (score or 0.0)
             scores[co_book_id] = scores.get(co_book_id, 0.0) + contrib
-            if contrib > source.get(co_book_id, (None, -1.0))[1]:
-                source[co_book_id] = (seed, contrib)
+            if contrib > source.get(co_book_id, (None, -1.0, None))[1]:
+                source[co_book_id] = (seed, contrib, 'coloan')
+
+    # 3.5) 임베딩 이웃으로 보강 — co-loan이 없는(dead-end) 책도 내용 유사로 후보화 (D30)
+    seed_weight = {s: w for s, w in positive}
+    pos_isbns = [s for s, _ in positive]
+    for isbn, sim, best_seed in similar_books(pos_isbns, exclude=exclude, limit=40):
+        contrib = seed_weight.get(best_seed, 1.0) * sim * W_EMBED
+        scores[isbn] = scores.get(isbn, 0.0) + contrib
+        if contrib > source.get(isbn, (None, -1.0, None))[1]:
+            source[isbn] = (best_seed, contrib, 'embed')
 
     # 4) 부족하면 관심사 / 전체 인기대출로 보충 (낮은 가중)
     interest_prefixes = [it.kdc_prefix for it in user.profile.interests.all() if it.kdc_prefix]
@@ -96,8 +107,14 @@ def build_candidates(user, seed_isbn13=None, limit=5):
             book = Book.objects.filter(isbn13=isbn).first()
             if not book:
                 continue
-            via_isbn = source.get(isbn, (None, 0.0))[0]
+            via_isbn, _, kind = source.get(isbn, (None, 0.0, None))
             via_title = seed_titles.get(via_isbn)
+            if kind == 'coloan' and via_title:
+                signal = "좋아한 '%s'와 함께 많이 빌린 책" % via_title
+            elif kind == 'embed' and via_title:
+                signal = "좋아한 '%s'와 내용이 비슷한 책" % via_title
+            else:
+                signal = "도서관 인기 대출 도서"
             out.append({
                 "isbn13": isbn,
                 "title": book.title,
@@ -105,7 +122,7 @@ def build_candidates(user, seed_isbn13=None, limit=5):
                 "kdc_code": book.kdc_code,
                 "via_isbn13": via_isbn,
                 "via_title": via_title,
-                "signal": ("좋아한 '%s'와 함께 많이 빌린 책" % via_title) if via_title else "도서관 인기 대출 도서",
+                "signal": signal,
                 "library_name": chosen.library.name,
                 "score": round(sc, 3),
             })
