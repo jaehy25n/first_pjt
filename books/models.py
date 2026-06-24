@@ -53,3 +53,13 @@ class CoLoan(models.Model):
 
     def __str__(self):
         return f"{self.book.title} -> {self.co_book.title} ({self.score})"
+
+class BookEmbedding(models.Model):
+    """내용 기반 임베딩 벡터(오프라인 계산·저장). 런타임은 이 벡터로 코사인만 (D30)."""
+    book = models.OneToOneField(Book, on_delete=models.CASCADE, related_name='embedding', primary_key=True)
+    model = models.CharField(max_length=50)        # 예: text-embedding-3-small
+    vector = models.JSONField()                     # float 리스트(1536d)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.book.title} emb({self.model})"
