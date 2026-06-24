@@ -2,9 +2,6 @@
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold mb-0">내 서재</h2>
-      <button class="btn btn-outline-secondary btn-sm" @click="libraryStore.fetchLibrary">
-        새로고침
-      </button>
     </div>
 
     <!-- 로딩 스피너 -->
@@ -154,7 +151,7 @@ const chartDataMonthly = computed(() => {
     labels: labels.length ? labels : ['이번 달'],
     datasets: [{
       label: '완독 권수',
-      backgroundColor: '#0d6efd',
+      backgroundColor: 'rgba(54, 162, 235, 0.6)',
       data: data.length ? data : [0]
     }]
   }
@@ -175,7 +172,18 @@ const chartDataKdc = computed(() => {
   return {
     labels: labels.length ? labels : ['데이터 없음'],
     datasets: [{
-      backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6f42c1', '#fd7e14', '#20c997', '#6c757d', '#e83e8c'],
+      backgroundColor: [
+        'rgba(13, 110, 253, 0.6)', 
+        'rgba(25, 135, 84, 0.6)', 
+        'rgba(255, 193, 7, 0.6)',
+        'rgba(220, 53, 69, 0.6)',
+        'rgba(13, 202, 240, 0.6)',
+        'rgba(111, 66, 193, 0.6)',
+        'rgba(253, 126, 20, 0.6)',
+        'rgba(32, 201, 151, 0.6)',
+        'rgba(108, 117, 125, 0.6)',
+        'rgba(232, 62, 140, 0.6)'
+      ],
       data: data.length ? data : [1]
     }]
   }

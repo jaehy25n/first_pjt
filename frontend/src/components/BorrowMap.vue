@@ -13,7 +13,7 @@
           style="max-width: 220px;"
           placeholder="또는 내 위치 직접 입력 (예: 마포구 신촌로)"
         />
-        <button type="submit" class="btn btn-sm btn-outline-secondary" :disabled="geocoding">찾기</button>
+        <button type="submit" class="btn btn-sm btn-outline-secondary" :disabled="geocoding" style="white-space: nowrap;">찾기</button>
       </form>
       <span v-if="geoMsg" class="text-muted small">{{ geoMsg }}</span>
     </div>
