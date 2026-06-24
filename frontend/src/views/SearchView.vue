@@ -18,6 +18,9 @@
       </form>
     </div>
 
+    <!-- 취향 발견 (홈에서 이동) — 로그인 + 검색 전 기본 화면 -->
+    <DiscoverSection v-show="accountStore.isLogin && !hasSearched && !isSearching && !errorMessage" />
+
     <!-- 로딩 스피너 -->
     <div v-if="isSearching" class="text-center my-5">
       <div class="spinner-border" role="status"></div>
@@ -76,6 +79,10 @@
 import { ref } from 'vue'
 import axiosInstance from '@/api/axios'
 import BookCard from '@/components/BookCard.vue'
+import DiscoverSection from '@/components/DiscoverSection.vue'
+import { useAccountStore } from '@/stores/accounts'
+
+const accountStore = useAccountStore()
 
 const searchQuery = ref('')
 const hasSearched = ref(false)
