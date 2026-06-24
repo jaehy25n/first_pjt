@@ -76,6 +76,8 @@ class Command(BaseCommand):
                 continue
 
             for book, vec in zip(batch, vectors):
+                # 소수 6자리로 반올림 — 코사인엔 충분하고 fixtures 용량 절반 이하 (D30)
+                vec = [round(x, 6) for x in vec]
                 BookEmbedding.objects.update_or_create(
                     book=book, defaults={"model": EMBED_MODEL, "vector": vec}
                 )
