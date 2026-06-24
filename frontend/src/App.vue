@@ -17,9 +17,6 @@
               <li class="nav-item">
                 <router-link to="/search" class="nav-link" active-class="active">검색</router-link>
               </li>
-              <li class="nav-item">
-                <router-link to="/visit" class="nav-link" active-class="active">방문모드</router-link>
-              </li>
               <li class="nav-item" v-if="store.isLogin">
                 <router-link to="/library" class="nav-link" active-class="active">내 서재</router-link>
               </li>
