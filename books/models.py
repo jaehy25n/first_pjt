@@ -4,6 +4,9 @@ class Library(models.Model):
     lib_code = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     region = models.CharField(max_length=100)
+    address = models.CharField(max_length=255, blank=True, default='')
+    latitude = models.FloatField(null=True, blank=True)    # 위치기반 근처 도서관 (D34)
+    longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.name
