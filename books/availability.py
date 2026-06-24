@@ -1,4 +1,4 @@
-"""정보나루 온디맨드 가용성 (⑦c, D33) — 런타임 lazy 조회 + Holding TTL 캐시.
+"""정보나루 온디맨드 (⑦c·⑧, D33) — 가용성(bookExist/libSrchByBook) + 이용분석(usageAnalysisList). 런타임 lazy + Holding TTL 캐시.
 
 화면에 보이는 소수 책 × 선택 도서관만 bookExist로 확인하고, Holding을 snapshot_at TTL로
 재사용(반복호출·throttle 방지). 책 상세는 libSrchByBook(region=11)로 서울 소장관 목록.
@@ -19,6 +19,7 @@ from .models import Holding
 
 BOOK_EXIST_URL = "http://data4library.kr/api/bookExist"
 LIB_BY_BOOK_URL = "http://data4library.kr/api/libSrchByBook"
+USAGE_URL = "http://data4library.kr/api/usageAnalysisList"
 
 HOLDING_TTL = timedelta(hours=6)      # 이보다 오래된 Holding만 재조회 (데모용·조절 가능)
 MAX_CALLS_PER_REQUEST = 20            # 한 요청에서 bookExist 최대 호출 수 (지연·throttle 방어)
@@ -117,3 +118,51 @@ def libs_for_book(isbn, region="11"):
             "longitude": lib.get("longitude"),
         })
     return out
+
+
+def book_usage(isbn):
+    """책 1권의 이용분석(usageAnalysisList) — 연관 키워드 + 월별 대출 추이 (+ 연령·성별, 있으면).
+    ⑧(D33 정보나루 B): 책 상세에서 lazy 1콜. 실패/빈값이면 빈 구조. ※ usageAnalysisList는 isbn13 파라미터."""
+    empty = {"keywords": [], "loan_history": [], "loan_groups": []}
+    if not isbn:
+        return empty
+    resp = _get(USAGE_URL, {"isbn13": isbn})
+    if not resp:
+        return empty
+
+    keywords = []
+    for item in resp.get("keywords", []) or []:
+        k = item.get("keyword", {}) if isinstance(item, dict) else {}
+        word = (k.get("word") or "").strip()
+        if not word:
+            continue
+        try:
+            weight = float(k.get("weight") or 0)
+        except (TypeError, ValueError):
+            weight = 0.0
+        keywords.append({"word": word, "weight": weight})
+    keywords.sort(key=lambda x: x["weight"], reverse=True)
+    keywords = keywords[:20]
+
+    loan_history = []
+    for item in resp.get("loanHistory", []) or []:
+        lo = item.get("loan", {}) if isinstance(item, dict) else {}
+        month = lo.get("month")
+        if not month:
+            continue
+        try:
+            cnt = int(lo.get("loanCnt") or 0)
+        except (TypeError, ValueError):
+            cnt = 0
+        loan_history.append({"month": month, "loanCnt": cnt})
+
+    loan_groups = []
+    for item in resp.get("loanGrps", []) or []:
+        g = item.get("loanGrp", item) if isinstance(item, dict) else {}
+        loan_groups.append({
+            "age": g.get("age"),
+            "gender": g.get("gender"),
+            "loan_count": g.get("loanCnt"),
+        })
+
+    return {"keywords": keywords, "loan_history": loan_history, "loan_groups": loan_groups}

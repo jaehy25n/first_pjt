@@ -55,6 +55,13 @@
             <p style="white-space: pre-wrap;">{{ book.description || '도서 소개가 제공되지 않습니다.' }}</p>
           </div>
 
+          <div v-if="keywords.length > 0" class="mb-4">
+            <h5 class="mb-2">연관 키워드</h5>
+            <span v-for="kw in keywords" :key="kw.word" class="badge rounded-pill text-bg-light me-1 mb-1">
+              #{{ kw.word }}
+            </span>
+          </div>
+
           <hr class="my-4">
 
           <div>
@@ -122,6 +129,7 @@ const book = ref(null)
 const availabilities = ref([])
 const seoulLibraries = ref([])
 const seoulLoading = ref(true)
+const keywords = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
@@ -161,11 +169,21 @@ const fetchSeoulLibraries = async () => {
   }
 }
 
+const fetchUsage = async () => {
+  try {
+    const res = await axiosInstance.get(`/api/books/${isbn13}/usage/`)
+    keywords.value = res.data.keywords || []
+  } catch (e) {
+    keywords.value = []
+  }
+}
+
 onMounted(async () => {
   if (accountStore.isLogin && !libraryStore.isLoaded) {
     libraryStore.fetchLibrary()
   }
   fetchSeoulLibraries() // 서울 소장관 목록은 비동기로(메인 로드 막지 않게)
+  fetchUsage() // 연관 키워드 비동기 로드 (⑧)
   try {
     // 도서 기본 상세 정보 및 가용성 동시 호출
     const [bookRes, availRes] = await Promise.all([
