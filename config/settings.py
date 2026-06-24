@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'   # 비밀번호·폼 검증 메시지를 한글로
 
 TIME_ZONE = 'UTC'
 
@@ -158,5 +158,8 @@ REST_FRAMEWORK = {
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+# 이메일은 선택 입력(필수 아님). allauth 65+ 방식 (email에 '*' 없음 = 선택)
+ACCOUNT_LOGIN_METHODS = {'username'}
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'password1*', 'password2*', 'email']
 
 AUTH_USER_MODEL = 'accounts.User'

@@ -3,7 +3,7 @@
     <div class="card mx-auto" style="max-width: 400px;">
       <div class="card-body">
         <h2 class="text-center mb-4">회원가입</h2>
-        <form @submit.prevent="handleSignup">
+        <form @submit.prevent="handleSignup" class="text-start">
           <div class="mb-3">
             <label for="username" class="form-label">아이디</label>
             <input 
@@ -16,13 +16,14 @@
           </div>
           <div class="mb-3">
             <label for="password" class="form-label">비밀번호</label>
-            <input 
-              type="password" 
-              class="form-control" 
-              id="password" 
-              v-model.trim="password" 
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              v-model.trim="password"
               required
             >
+            <div class="form-text">8자 이상, 너무 단순하거나 흔한 비밀번호는 사용할 수 없어요.</div>
           </div>
           <div class="mb-3">
             <label for="passwordConfirm" class="form-label">비밀번호 확인</label>

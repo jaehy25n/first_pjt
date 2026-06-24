@@ -14,12 +14,10 @@ export const useAccountStore = defineStore('account', () => {
 
   const signUp = async function ({ username, password1, password2, email }) {
     try {
-      await axiosInstance.post('/accounts/signup/', {
-        username,
-        password1,
-        password2,
-        email
-      })
+      // 이메일은 선택 — 빈 값이면 아예 보내지 않음(빈 문자열은 서버가 거부)
+      const payload = { username, password1, password2 }
+      if (email) payload.email = email
+      await axiosInstance.post('/accounts/signup/', payload)
       console.log('회원 가입이 완료되었습니다.')
       // Auto login after sign up → 신규 가입자는 온보딩으로 유도
       await logIn({ username, password: password1 }, 'onboarding')
