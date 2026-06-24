@@ -8,8 +8,8 @@
 
     <div class="mb-4">
       <label class="form-label small fw-semibold mb-2">
-        이용할 도서관을 골라주세요 <span class="text-secondary">(여러 곳 선택 가능)</span>
-        <span class="text-muted">— 추천이 고른 도서관들에서 '지금 빌릴 수 있는' 책 기준으로 만들어져요</span>
+        이용할 도서관을 골라주세요 <span class="text-secondary">(선택 · 여러 곳 가능)</span>
+        <span class="text-muted">— 고른 도서관의 '지금 대출 가능' 여부가 책에 배지로 표시돼요 (나중에 추가해도 돼요)</span>
       </label>
       <div v-if="libraries.length === 0" class="text-muted small">도서관 목록을 불러오는 중…</div>
       <div v-else class="d-flex flex-wrap gap-2">
@@ -77,13 +77,13 @@
         <button
           type="button"
           class="btn btn-success btn-lg"
-          :disabled="submitting || likedCount === 0 || selectedLibs.length === 0"
+          :disabled="submitting || likedCount === 0"
           @click="submit"
         >
           {{ submitting ? '저장 중…' : '시작하기' }}
         </button>
-        <small v-if="likedCount === 0 || selectedLibs.length === 0" class="text-muted text-center mt-2">
-          {{ selectedLibs.length === 0 ? '도서관을 한 곳 이상 골라주세요.' : '한 권 이상 골라주세요.' }}
+        <small v-if="likedCount === 0" class="text-muted text-center mt-2">
+          한 권 이상 골라주세요.
         </small>
       </div>
     </div>
