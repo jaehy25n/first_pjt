@@ -14,11 +14,22 @@
         <!-- 1단: 표지 및 기본 정보 (좌측) -->
         <div class="col-md-4 mb-4">
           <div class="card">
-            <img 
-              :src="book.cover_url || 'https://via.placeholder.com/300x400?text=No+Cover'" 
-              class="card-img-top img-fluid" 
-              alt="book cover"
-            >
+            <div class="position-relative">
+              <img
+                :src="book.cover_url || 'https://via.placeholder.com/300x400?text=No+Cover'"
+                class="card-img-top img-fluid"
+                alt="book cover"
+              >
+              <button
+                v-if="accountStore.isLogin"
+                type="button"
+                class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 like-btn"
+                :title="isLiked ? '좋아요 취소' : '좋아요'"
+                @click="onToggleLike"
+              >
+                <i class="bi" :class="isLiked ? 'bi-heart-fill text-danger' : 'bi-heart'"></i>
+              </button>
+            </div>
             <div class="card-body">
               <p class="mb-1"><strong>저자:</strong> {{ book.author }}</p>
               <p class="mb-1"><strong>출판사:</strong> {{ book.publisher }}</p>
@@ -55,32 +66,18 @@
             <p style="white-space: pre-wrap;">{{ book.description || '도서 소개가 제공되지 않습니다.' }}</p>
           </div>
 
+          <div v-if="keywords.length > 0" class="mb-4">
+            <h5 class="mb-2">연관 키워드</h5>
+            <span v-for="kw in keywords" :key="kw.word" class="badge rounded-pill text-bg-light me-1 mb-1">
+              #{{ kw.word }}
+            </span>
+          </div>
+
           <hr class="my-4">
 
           <div>
-            <h5 class="mb-3">도서관별 소장 및 대출 현황</h5>
-            
-            <div v-if="availabilities.length > 0">
-              <div class="list-group">
-                <div v-for="avail in availabilities" :key="avail.lib_code" class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-0">{{ avail.library_name }}</h6>
-                    <small v-if="!avail.has_book" class="text-muted">미소장</small>
-                    <small v-else-if="avail.loan_available" class="text-success">대출가능</small>
-                    <small v-else class="text-warning">대출중</small>
-                  </div>
-                  
-                  <div>
-                    <span v-if="!avail.has_book" class="badge text-bg-secondary">미소장</span>
-                    <span v-else-if="avail.loan_available" class="badge text-bg-success">대출가능</span>
-                    <span v-else class="badge text-bg-warning">대출중</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="alert alert-secondary">
-              등록된 도서관 중 이 책을 소장한 곳이 없습니다.
-            </div>
+            <h5 class="mb-3">이 책을 빌릴 수 있는 도서관</h5>
+            <BorrowMap :isbn13="isbn13" />
           </div>
         </div>
       </div>
@@ -94,6 +91,7 @@ import { useRoute } from 'vue-router'
 import axiosInstance from '@/api/axios'
 import { useAccountStore } from '@/stores/accounts'
 import { useLibraryStore } from '@/stores/library'
+import BorrowMap from '@/components/BorrowMap.vue'
 
 const route = useRoute()
 const isbn13 = route.params.isbn13
@@ -102,7 +100,7 @@ const accountStore = useAccountStore()
 const libraryStore = useLibraryStore()
 
 const book = ref(null)
-const availabilities = ref([])
+const keywords = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
@@ -131,19 +129,28 @@ const setStatus = async (value) => {
   }
 }
 
+const isLiked = computed(() => libraryStore.checkIsLiked(isbn13))
+const onToggleLike = () => {
+  if (book.value) libraryStore.toggleLike(isbn13, book.value)
+}
+
+const fetchUsage = async () => {
+  try {
+    const res = await axiosInstance.get(`/api/books/${isbn13}/usage/`)
+    keywords.value = res.data.keywords || []
+  } catch (e) {
+    keywords.value = []
+  }
+}
+
 onMounted(async () => {
   if (accountStore.isLogin && !libraryStore.isLoaded) {
     libraryStore.fetchLibrary()
   }
+  fetchUsage() // 연관 키워드 비동기 로드 (⑧)
   try {
-    // 도서 기본 상세 정보 및 가용성 동시 호출
-    const [bookRes, availRes] = await Promise.all([
-      axiosInstance.get(`/api/books/${isbn13}/`),
-      axiosInstance.get(`/api/books/${isbn13}/availability/`)
-    ])
-    
+    const bookRes = await axiosInstance.get(`/api/books/${isbn13}/`)
     book.value = bookRes.data
-    availabilities.value = availRes.data
   } catch (error) {
     console.error('도서 상세 로드 실패:', error)
     errorMessage.value = '도서 정보를 불러오는 중 오류가 발생했습니다.'
@@ -189,4 +196,13 @@ onMounted(async () => {
   transition: color 0.25s ease;
 }
 .read-slider-opt.active { color: #fff; font-weight: 600; }
+.like-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
 </style>

@@ -23,7 +23,7 @@
     </div>
 
     <template v-else>
-      <div v-if="books.length" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+      <div v-if="books.length" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-2">
         <div v-for="book in books" :key="book.isbn13" class="col">
           <div
             class="card h-100 shadow-sm discover-card"
@@ -142,7 +142,7 @@ onMounted(fetchSpread)
 <style scoped>
 .discover-card { cursor: pointer; transition: transform 0.15s ease-in-out; }
 .discover-card:hover { transform: translateY(-4px); }
-.cover { height: 180px; object-fit: cover; }
+.cover { height: 210px; object-fit: cover; }
 .title-clamp {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
