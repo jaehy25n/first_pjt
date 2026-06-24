@@ -26,6 +26,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--force", action="store_true", help="이미 임베딩된 책도 다시 계산")
         parser.add_argument("--limit", type=int, default=0, help="처음 N권만(테스트용)")
+        parser.add_argument("--batch-size", type=int, default=BATCH_SIZE,
+                            help=f"한 요청에 넣는 책 수(기본 {BATCH_SIZE}). 400/한도 초과 시 줄여보기")
 
     def handle(self, *args, **opts):
         url = os.getenv("GMS_URL", "https://gms.ssafy.io/gmsapi/api.openai.com/v1")
@@ -48,31 +50,37 @@ class Command(BaseCommand):
 
         headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
         saved, failed = 0, 0
+        bs = max(1, opts["batch_size"])
 
-        for start in range(0, len(books), BATCH_SIZE):
-            batch = books[start : start + BATCH_SIZE]
+        for start in range(0, len(books), bs):
+            batch = books[start : start + bs]
             inputs = [build_text(b) for b in batch]
 
             vectors = None
             for attempt in range(3):
+                resp = None
                 try:
-                    r = requests.post(
+                    resp = requests.post(
                         f"{url}/embeddings",
                         headers=headers,
                         json={"model": EMBED_MODEL, "input": inputs},
                         timeout=60,
                     )
-                    r.raise_for_status()
-                    data = sorted(r.json()["data"], key=lambda d: d["index"])
+                    resp.raise_for_status()
+                    data = sorted(resp.json()["data"], key=lambda d: d["index"])
                     vectors = [d["embedding"] for d in data]
                     break
                 except Exception as e:
+                    body = (resp.text[:400] if resp is not None else "")
                     wait = 3 * (attempt + 1)
-                    self.stderr.write(f"  배치 {start} 실패({e}) → {wait}s 후 재시도")
+                    self.stderr.write(f"  배치 {start} 실패({e}) GMS응답: {body} → {wait}s 후 재시도")
                     time.sleep(wait)
 
             if vectors is None or len(vectors) != len(batch):
                 failed += len(batch)
+                # 어떤 책이 문제인지 식별에 도움 — 실패 배치의 입력 길이 분포
+                lens = sorted(len(x) for x in inputs)
+                self.stderr.write(f"   ↳ 실패 배치 {start}: 입력 {len(inputs)}건, 글자수 min/max {lens[0]}/{lens[-1]}")
                 continue
 
             for book, vec in zip(batch, vectors):
@@ -83,7 +91,7 @@ class Command(BaseCommand):
                 )
                 saved += 1
 
-            self.stdout.write(f"  {min(start + BATCH_SIZE, len(books))}/{len(books)} 저장…")
+            self.stdout.write(f"  {min(start + bs, len(books))}/{len(books)} 저장…")
             time.sleep(0.5)
 
         self.stdout.write(self.style.SUCCESS(f"임베딩 완료: 저장 {saved}건, 실패 {failed}건 ({EMBED_MODEL})"))

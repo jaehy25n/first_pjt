@@ -26,6 +26,15 @@ def get_similar_books(target_candidate, all_candidates, book_map):
                 break
     return similar
 
+def _availability(c):
+    """후보의 가용성 배지(dict) 또는 None(도서관 미선택 → 배지 없음). status는
+    serializer와 같은 어휘: available/loaned/none. (D33 — 게이트 아님, 배지)"""
+    status = c.get('availability')
+    if not status:
+        return None
+    return {"library_name": c.get('library_name', ''), "status": status}
+
+
 def fallback_selection(candidates, limit, book_map):
     """GMS 호출 실패/타임아웃 시 데이터 랭킹(순서)대로 반환하는 폴백 로직"""
     out = []
@@ -46,10 +55,7 @@ def fallback_selection(candidates, limit, book_map):
             "author": c['author'],
             "cover_url": cover_url,
             "reason": reason,
-            "availability": {
-                "library_name": c.get('library_name', ''),
-                "status": "available"
-            },
+            "availability": _availability(c),
             "similar": get_similar_books(c, candidates, book_map),
             "order_note": None,
         })
@@ -198,10 +204,7 @@ def select_with_reasons(candidates, profile, limit=5, seed_isbn13=None):
             "author": c['author'],
             "cover_url": cover_url,
             "reason": reason,
-            "availability": {
-                "library_name": c.get('library_name', ''),
-                "status": "available"
-            },
+            "availability": _availability(c),
             "similar": get_similar_books(c, candidates, book_map),
             "order_note": order_note,
         })
