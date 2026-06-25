@@ -38,7 +38,33 @@ const routes = [
     path: '/library',
     name: 'library',
     component: () => import('../views/LibraryView.vue')
-  }
+  },
+  // ── 커뮤니티 ─────────────────────────────────────────────
+  {
+    path: '/community',
+    name: 'community',
+    component: () => import('../views/CommunityListView.vue')
+  },
+  {
+    path: '/community/create',
+    name: 'community_create',
+    component: () => import('../views/CommunityFormView.vue')
+  },
+  {
+    path: '/community/me',
+    name: 'community_me',
+    component: () => import('../views/CommunityMyView.vue')
+  },
+  {
+    path: '/community/:id',
+    name: 'community_detail',
+    component: () => import('../views/CommunityDetailView.vue')
+  },
+  {
+    path: '/community/:id/edit',
+    name: 'community_edit',
+    component: () => import('../views/CommunityFormView.vue')
+  },
 ]
 
 const router = createRouter({
