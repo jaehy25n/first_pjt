@@ -86,8 +86,8 @@
 |---|---|
 | 도서 추천 선별 + 이유 생성 | SSAFY GMS (`gpt-5-nano`) |
 | 책 임베딩 생성 (유사도 기반 추천·발견) | SSAFY GMS (`text-embedding-3-small`) |
-| 백엔드 API·추천 로직·데이터 파이프라인 구현 보조 | Claude Code |
-| 프론트엔드 컴포넌트·UI 구현 보조 | Antigravity |
+| 백엔드 API·추천 로직·데이터 파이프라인 구현 보조 |
+| 프론트엔드 컴포넌트·UI 구현 보조 |
 
 ---
 
