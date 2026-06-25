@@ -181,7 +181,9 @@ npm run dev
 ![내 서재](images/screenshots/myshelf.png)
 
 ### 커뮤니티
-![커뮤니티](images/screenshots/community.png)
+![커뮤니티1](images/screenshots/community_1.png)
+![커뮤니티2](images/screenshots/community_2.png)
+![커뮤니티3](images/screenshots/community_3.png)
 
 ---
 
