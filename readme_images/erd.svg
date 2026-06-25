@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">
+  <defs>
+    <style>
+      .entity-title { font-size: 14px; font-weight: 700; fill: #ffffff; }
+      .field { font-size: 11.5px; fill: #3a3f4b; }
+      .pk { font-weight: 700; fill: #1f2330; }
+      .rel { font-size: 10.5px; fill: #6b7280; }
+      .box-bg { fill: #ffffff; stroke: #d6d9e0; stroke-width: 1; }
+      .line { stroke: #b3b8c4; stroke-width: 1.4; fill: none; }
+      .legend { font-size: 11px; fill: #6b7280; }
+    </style>
+    <marker id="dot" markerWidth="8" markerHeight="8" refX="4" refY="4">
+      <circle cx="4" cy="4" r="3" fill="#8b91a3"/>
+    </marker>
+  </defs>
+
+  <rect width="980" height="640" fill="#fbfbfd"/>
+  <text x="32" y="40" font-size="18" font-weight="700" fill="#1f2330">책잇다 · ERD</text>
+
+  <!-- ===== Relationship lines (draw first, under boxes) ===== -->
+  <!-- User -> Profile -->
+  <path class="line" d="M 180 150 H 360" marker-end="url(#dot)"/>
+  <!-- User -> ReadingLog -->
+  <path class="line" d="M 100 200 V 300 H 360" marker-end="url(#dot)"/>
+  <!-- User -> BookPreference -->
+  <path class="line" d="M 100 200 V 430 H 360" marker-end="url(#dot)"/>
+  <!-- User -> Article -->
+  <path class="line" d="M 130 200 V 540 H 360" marker-end="url(#dot)"/>
+
+  <!-- Profile -> Library / Interest -->
+  <path class="line" d="M 560 150 H 770" marker-end="url(#dot)"/>
+  <!-- ReadingLog -> Book -->
+  <path class="line" d="M 560 320 H 748" marker-end="url(#dot)"/>
+  <!-- BookPreference -> Book -->
+  <path class="line" d="M 560 438 H 660 V 340 H 748" marker-end="url(#dot)"/>
+  <!-- Article -> Book -->
+  <path class="line" d="M 560 545 H 700 V 360 H 748" marker-end="url(#dot)"/>
+
+  <!-- ===== USER ===== -->
+  <g>
+    <rect class="box-bg" x="32" y="110" width="148" height="70" rx="8"/>
+    <rect x="32" y="110" width="148" height="26" rx="8" fill="#3b3f8f"/>
+    <rect x="32" y="124" width="148" height="12" fill="#3b3f8f"/>
+    <text class="entity-title" x="44" y="128">User</text>
+    <text class="pk field" x="44" y="156">• id (PK)</text>
+    <text class="field" x="44" y="172">username, password</text>
+  </g>
+
+  <!-- ===== PROFILE ===== -->
+  <g>
+    <rect class="box-bg" x="360" y="105" width="200" height="92" rx="8"/>
+    <rect x="360" y="105" width="200" height="26" rx="8" fill="#3b3f8f"/>
+    <rect x="360" y="119" width="200" height="12" fill="#3b3f8f"/>
+    <text class="entity-title" x="372" y="123">Profile</text>
+    <text class="field" x="372" y="150">reading_goal</text>
+    <text class="field" x="372" y="166">interests (M2M)</text>
+    <text class="field" x="372" y="182">libraries (M2M)</text>
+  </g>
+
+  <!-- ===== ReadingLog ===== -->
+  <g>
+    <rect class="box-bg" x="360" y="285" width="200" height="74" rx="8"/>
+    <rect x="360" y="285" width="200" height="26" rx="8" fill="#5a5fa8"/>
+    <rect x="360" y="299" width="200" height="12" fill="#5a5fa8"/>
+    <text class="entity-title" x="372" y="303">ReadingLog</text>
+    <text class="field" x="372" y="330">status: reading/finished</text>
+    <text class="field" x="372" y="346">rating</text>
+  </g>
+
+  <!-- ===== BookPreference ===== -->
+  <g>
+    <rect class="box-bg" x="360" y="410" width="200" height="56" rx="8"/>
+    <rect x="360" y="410" width="200" height="26" rx="8" fill="#5a5fa8"/>
+    <rect x="360" y="424" width="200" height="12" fill="#5a5fa8"/>
+    <text class="entity-title" x="372" y="428">BookPreference</text>
+    <text class="field" x="372" y="455">sentiment: like/dislike</text>
+  </g>
+
+  <!-- ===== Article + Comment/Like ===== -->
+  <g>
+    <rect class="box-bg" x="360" y="510" width="200" height="74" rx="8"/>
+    <rect x="360" y="510" width="200" height="26" rx="8" fill="#7a7fbe"/>
+    <rect x="360" y="524" width="200" height="12" fill="#7a7fbe"/>
+    <text class="entity-title" x="372" y="528">Article</text>
+    <text class="field" x="372" y="555">title, content</text>
+    <text class="field" x="372" y="571">Comment · ArticleLike</text>
+  </g>
+
+  <!-- ===== BOOK (central right) ===== -->
+  <g>
+    <rect class="box-bg" x="748" y="270" width="222" height="130" rx="8"/>
+    <rect x="748" y="270" width="222" height="26" rx="8" fill="#2a2e4a"/>
+    <rect x="748" y="284" width="222" height="12" fill="#2a2e4a"/>
+    <text class="entity-title" x="760" y="288">Book</text>
+    <text class="pk field" x="760" y="315">• isbn13 (PK)</text>
+    <text class="field" x="760" y="332">title, author</text>
+    <text class="field" x="760" y="349">publisher, kdc_code</text>
+    <text class="field" x="760" y="366">description</text>
+    <text class="field" x="760" y="383">+ Holding / LoanSignal</text>
+    <text class="field" x="760" y="399">+ CoLoan / Embedding</text>
+  </g>
+
+  <!-- ===== Library ===== -->
+  <g>
+    <rect class="box-bg" x="770" y="110" width="200" height="84" rx="8"/>
+    <rect x="770" y="110" width="200" height="26" rx="8" fill="#2a2e4a"/>
+    <rect x="770" y="124" width="200" height="12" fill="#2a2e4a"/>
+    <text class="entity-title" x="782" y="128">Library</text>
+    <text class="field" x="782" y="155">lib_code, name</text>
+    <text class="field" x="782" y="171">address</text>
+    <text class="field" x="782" y="187">latitude, longitude</text>
+  </g>
+
+  <!-- Book - Holding - Library 관계 표시 -->
+  <path class="line" d="M 870 270 V 200" marker-end="url(#dot)"/>
+  <text class="rel" x="878" y="235">Holding (소장·가용)</text>
+
+  <!-- ===== Legend ===== -->
+  <g transform="translate(800, 480)">
+    <rect x="0" y="0" width="16" height="16" rx="3" fill="#3b3f8f"/>
+    <text class="legend" x="24" y="12">계정·프로필</text>
+    <rect x="0" y="28" width="16" height="16" rx="3" fill="#5a5fa8"/>
+    <text class="legend" x="24" y="40">취향·독서기록</text>
+    <rect x="0" y="56" width="16" height="16" rx="3" fill="#7a7fbe"/>
+    <text class="legend" x="24" y="68">커뮤니티</text>
+    <rect x="0" y="84" width="16" height="16" rx="3" fill="#2a2e4a"/>
+    <text class="legend" x="24" y="96">도서·도서관</text>
+  </g>
+</svg>
