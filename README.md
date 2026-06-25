@@ -37,7 +37,7 @@
 
 ## 데이터베이스 모델링 (ERD)
 
-![ERD](docs/erd.png)
+![ERD](images/erd.png)
 
 ---
 
@@ -164,25 +164,27 @@ npm run dev
 ## 실행 화면
 
 ### 홈 — 오늘의 추천
-![홈](docs/screenshots/home.png)
+![홈1](images/screenshots/home_1.png)
+![홈2](images/screenshots/home_2.png)
 
 ### 온보딩 — 취향 고르기
-![온보딩](docs/screenshots/onboarding.png)
+![온보딩](images/screenshots/onboarding.png)
 
 ### 책 상세 — 도서관 지도
-![책 상세](docs/screenshots/book-detail.png)
+![책 상세1](images/screenshots/book-detail_1.png)
+![책 상세2](images/screenshots/book-detail_2.png)
 
 ### 검색 — 취향 발견
-![검색](docs/screenshots/search.png)
+![검색](images/screenshots/search.png)
 
 ### 내 서재
-![내 서재](docs/screenshots/myshelf.png)
+![내 서재](images/screenshots/myshelf.png)
 
 ### 커뮤니티
-![커뮤니티](docs/screenshots/community.png)
+![커뮤니티](images/screenshots/community.png)
 
 ---
 
 ## Git 커밋 내역
 
-![커밋 내역](docs/screenshots/commits.png)
+![커밋 내역](images/screenshots/commits.png)
