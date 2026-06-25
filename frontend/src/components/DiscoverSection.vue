@@ -1,13 +1,10 @@
 <template>
   <div class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-1">
-      <h2 class="fw-bold mb-0">취향 발견</h2>
-      <button v-if="picks.length || seen.length" class="btn btn-link btn-sm text-decoration-none text-muted" @click="reset">
-        처음부터
-      </button>
+      <h2 class="fw-bold mb-0">이런 책도 잇다</h2>
     </div>
     <p class="text-muted mb-3">
-      마음에 드는 책을 고를수록 <span class="text-primary fw-semibold">아래 책들이 더 잘 맞춰집니다.</span>
+      마음에 드는 책을 더 많이 고를수록,<span class="text-primary fw-semibold"> 내 취향에 딱 맞는 책들이 나타납니다.</span>
     </p>
 
     <!-- 도서관 미선택 등 빈 상태 -->
@@ -61,8 +58,11 @@
         <div class="spinner-border spinner-border-sm" role="status"></div> 불러오는 중…
       </div>
 
-      <div v-if="books.length" class="d-flex justify-content-center mt-3">
-        <button class="btn btn-primary" :disabled="loading" @click="fetchSpread">
+      <div v-if="books.length" class="d-flex justify-content-center mt-3 gap-3">
+        <button v-if="picks.length || seen.length" class="btn btn-outline-secondary btn-sm px-5 fs-6" @click="reset">
+        처음부터
+        </button>
+        <button class="btn btn-primary px-4 fs-6" :disabled="loading" @click="fetchSpread">
           {{ picks.length ? '고른 취향으로 더 보기' : '다른 책 보기' }}
           <i class="bi bi-arrow-repeat ms-1"></i>
         </button>

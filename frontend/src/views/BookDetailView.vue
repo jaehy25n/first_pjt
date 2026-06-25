@@ -60,7 +60,8 @@
 
         <!-- 2단: 도서 소개 및 도서관 가용성 (우측) -->
         <div class="col-md-8">
-          <h2 class="mb-3">{{ book.title }}</h2>
+          <hr class="my-1 mb-4">
+          <h1 class="mb-4">{{ book.title }}</h1>
           <div class="mb-4">
             <h5>도서 소개</h5>
             <p style="white-space: pre-wrap;">{{ book.description || '도서 소개가 제공되지 않습니다.' }}</p>
@@ -76,7 +77,7 @@
           <hr class="my-4">
 
           <div>
-            <h5 class="mb-3">이 책을 빌릴 수 있는 도서관</h5>
+            <h5 class="mb-3">여기 도서관에 책잇다</h5>
             <BorrowMap :isbn13="isbn13" />
           </div>
         </div>
