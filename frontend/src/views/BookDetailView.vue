@@ -31,7 +31,7 @@
               </button>
             </div>
             <div class="card-body">
-              <p class="mb-1"><strong>저자:</strong> {{ book.author }}</p>
+              <p class="mb-1">{{ book.author }}</p>
               <p class="mb-1"><strong>출판사:</strong> {{ book.publisher }}</p>
               <p class="mb-1"><strong>출판연도:</strong> {{ book.pub_year }}</p>
               <p class="mb-0"><strong>KDC:</strong> {{ book.kdc_code }}</p>
