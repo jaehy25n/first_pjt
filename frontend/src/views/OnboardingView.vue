@@ -1,6 +1,6 @@
 <template>
   <div class="container py-4" style="max-width: 920px;">
-    <h3 class="fw-bold mb-1">취향 고르기</h3>
+    <h3 class="fw-bold mb-1">내 독서 취향은?</h3>
     <p class="text-muted mb-4">
       끌리는 책의 표지를 눌러 <span class="text-primary fw-semibold">좋아요</span>를 표시해주세요.
       <span class="text-secondary">읽었든 안 읽었든 괜찮아요 — 취향만 보는 거예요.</span>
@@ -45,17 +45,6 @@
 
       <div class="d-flex justify-content-between align-items-center mt-3">
         <button class="btn btn-link text-decoration-none" @click="reshuffle">{{ likedCount > 0 ? '🔄 비슷한 책 더 보기' : '🔄 다른 책 보기' }}</button>
-        <small class="text-muted">좋아요 {{ likedCount }}</small>
-      </div>
-
-      <div class="mt-4">
-        <label class="form-label small fw-semibold">요즘 어떤 책이 읽고 싶나요? <span class="text-muted">(선택)</span></label>
-        <input
-          v-model="goal"
-          type="text"
-          class="form-control"
-          placeholder="예: 위로받고 싶어요 / 데이터 분석 입문"
-        />
       </div>
 
       <div class="d-grid mt-4">
