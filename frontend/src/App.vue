@@ -1,9 +1,9 @@
 <template>
   <div id="app-container" class="d-flex flex-column min-vh-100">
     <header>
-      <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom sticky-top">
+      <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom fixed-top shadow-sm">
         <div class="container">
-          <router-link to="/" class="navbar-brand">다음책</router-link>
+          <router-link to="/" class="navbar-brand">책잇다</router-link>
           
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -35,7 +35,7 @@
       </nav>
     </header>
 
-    <main class="flex-grow-1 container my-4">
+    <main class="flex-grow-1 container my-4 pt-5">
       <router-view />
     </main>
   </div>

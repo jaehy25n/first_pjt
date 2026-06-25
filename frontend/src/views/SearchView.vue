@@ -1,7 +1,7 @@
 <template>
   <div class="container mt-4">
-    <div class="mb-4">
-      <h2>어떤 책을 찾으시나요?</h2>
+    <div class="mb-5">
+      <h2>어떤 책과 이어드릴까요?</h2>
       <p>도서 제목이나 저자를 검색하시면, 주 도서관의 대출 가능 여부까지 한 번에 알려드립니다.</p>
       
       <form @submit.prevent="handleSearch" class="d-flex gap-2">
@@ -11,11 +11,12 @@
           v-model.trim="searchQuery" 
           placeholder="책 제목 또는 저자 입력"
         >
-        <button class="btn btn-primary" type="submit" :disabled="isSearching">
+        <button class="btn btn-primary d-flex align-items-center justify-content-center" type="submit" :disabled="isSearching" style="min-width: 80px;">
           <span v-if="isSearching" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
           <span v-else>검색</span>
         </button>
       </form>
+      <hr class="my-4 mt-5">
     </div>
 
     <!-- 취향 발견 (홈에서 이동) — 로그인 + 검색 전 기본 화면 -->
