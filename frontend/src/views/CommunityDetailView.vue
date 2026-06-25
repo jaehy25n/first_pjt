@@ -18,7 +18,7 @@
         <span class="fw-semibold small" style="color:var(--ink)">{{ article.username }}</span>
         <span class="text-muted small">{{ formatDate(article.created_at) }}</span>
         <span v-if="article.updated_at !== article.created_at" class="text-muted small">(수정됨)</span>
-        <span class="text-muted small">💬 {{ article.comment_count }}</span>
+        <span class="text-muted small">댓글 {{ article.comment_count }}</span>
 
         <!-- 본인 글 수정/삭제 -->
         <div v-if="article.is_mine" class="ms-auto d-flex gap-2">

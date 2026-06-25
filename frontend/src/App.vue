@@ -18,7 +18,7 @@
             <ul class="navbar-nav flex-row me-3 d-none d-md-flex align-items-center">
               <li class="nav-item me-3"><router-link to="/" class="nav-link text-dark fw-bold">홈</router-link></li>
               <li class="nav-item me-3"><router-link to="/search" class="nav-link text-dark fw-bold">검색</router-link></li>
-              <li class="nav-item me-3"><router-link to="/community" class="nav-link text-dark fw-bold">커뮤니티</router-link></li>
+              <li class="nav-item me-3"><router-link to="/community" class="nav-link text-dark fw-bold">책마당</router-link></li>
               <li class="nav-item" v-if="store.isLogin"><router-link to="/library" class="nav-link text-dark fw-bold">내 서재</router-link></li>
             </ul>
             <div class="d-flex align-items-center">
@@ -47,7 +47,7 @@
           <!-- 스크롤 유도 인디케이터 (래퍼로 분리하여 CSS 애니메이션과 충돌 방지, 하단에 고정) -->
           <div class="position-absolute" v-if="isHome" :style="scrollIndicatorWrapperStyle">
             <div class="text-muted d-flex flex-column align-items-center scroll-indicator">
-              <span class="small mb-2" style="letter-spacing: 0.1em; font-weight: 500;">Scroll to Explore</span>
+              <span class="small mb-2" style="letter-spacing: 0.1em; font-weight: 500; font-size: 1.1rem;">Scroll to Explore</span>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bouncing-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
           </div>

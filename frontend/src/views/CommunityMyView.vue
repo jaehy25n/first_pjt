@@ -3,14 +3,13 @@
   <div class="my-articles">
     <div class="page-header border-bottom pb-4 mb-5">
       <router-link to="/community" class="d-inline-flex align-items-center gap-1 text-muted small mb-3" style="text-decoration:none">
-        ← 커뮤니티 전체
+        ← 목록으로
       </router-link>
       <div class="d-flex align-items-end justify-content-between">
         <div>
-          <h1 class="h3 fw-bold mb-1" style="color:var(--ink)">내가 쓴 글</h1>
-          <p class="text-muted small mb-0">내 독서 이야기 기록</p>
+          <h1 class="h3 fw-bold mb-1" style="color:var(--ink)">내 기록</h1>
+          <p class="text-muted small mb-0">독서 이야기를 잇다</p>
         </div>
-        <router-link to="/community/create" class="btn btn-primary btn-sm">✏️ 새 글</router-link>
       </div>
     </div>
 
@@ -21,7 +20,7 @@
 
     <!-- 게시글 없음 -->
     <div v-else-if="articles.length === 0" class="text-center py-5 text-muted">
-      <div class="mb-3" style="font-size:2.5rem">📝</div>
+      <div class="mb-3" style="font-size:2.5rem">...</div>
       <p class="mb-3">아직 작성한 글이 없어요.</p>
       <router-link to="/community/create" class="btn btn-outline-primary btn-sm">첫 글 써보기</router-link>
     </div>
@@ -59,13 +58,13 @@
         >
           <div class="flex-grow-1">
             <span v-if="article.book_title" class="badge rounded-pill mb-1" style="background:var(--accent);font-size:0.7rem">
-              📖 {{ article.book_title }}
+              {{ article.book_title }}
             </span>
             <h2 class="h6 fw-semibold mb-1" style="color:var(--ink)">{{ article.title }}</h2>
             <div class="d-flex gap-3">
               <small class="text-muted">{{ formatDate(article.created_at) }}</small>
               <small class="text-muted">❤️ {{ article.like_count }}</small>
-              <small class="text-muted">💬 {{ article.comment_count }}</small>
+              <small class="text-muted">댓글 {{ article.comment_count }}</small>
             </div>
           </div>
           <div class="d-flex gap-2 flex-shrink-0">
