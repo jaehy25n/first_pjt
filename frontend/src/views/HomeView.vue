@@ -1,5 +1,6 @@
 <template>
-  <div class="container mt-4">
+  <div class="home-wrapper pb-5">
+    <div class="container position-relative main-content-container">
     <!-- 비로그인: 로그인 유도 CTA -->
     <div v-if="!accountStore.isLogin" class="p-5 mb-5 bg-light rounded-3 shadow-sm text-center">
       <span class="badge bg-dark mb-2">책잇다</span>
@@ -88,6 +89,7 @@
     </template>
 
   </div>
+  </div>
 </template>
 
 <script setup>
@@ -109,6 +111,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.main-content-container {
+  z-index: 3;
+  background-color: transparent;
+}
 .card {
   transition: transform 0.2s ease-in-out;
 }
