@@ -5,18 +5,18 @@
       <router-link to="/community" class="d-inline-flex align-items-center gap-1 text-muted small mb-4" style="text-decoration:none">
         ← 목록으로
       </router-link>
-      <h1 class="h3 fw-bold" style="color:var(--ink)">{{ isEdit ? '게시글 수정' : '새 글 쓰기' }}</h1>
+      <h1 class="h3 fw-bold" style="color:var(--ink)">{{ isEdit ? '게시글 수정' : '새 글 작성' }}</h1>
       <p class="text-muted small mt-1 mb-0">책에 대한 이야기를 자유롭게 나눠보세요.</p>
     </div>
 
     <form @submit.prevent="submit" class="d-flex flex-column gap-4">
       <!-- 제목 -->
       <div>
-        <label class="form-label fw-semibold" style="color:var(--ink)">제목</label>
+        <label class="form-label fw-semibold fs-5" style="color:var(--ink)">제목</label>
         <input
           v-model="form.title"
           type="text"
-          class="form-control form-control-lg"
+          class="form-control form-control-lg fs-6"
           placeholder="어떤 이야기인가요?"
           maxlength="100"
           required
@@ -28,8 +28,8 @@
 
       <!-- 책 연결 (선택) -->
       <div>
-        <label class="form-label fw-semibold" style="color:var(--ink)">
-          📖 관련 책 연결 <span class="fw-normal text-muted">(선택)</span>
+        <label class="form-label fw-semibold fs-5" style="color:var(--ink)">
+          관련 책 <span class="fw-normal text-muted">(선택)</span>
         </label>
         <div class="d-flex gap-2">
           <input
@@ -65,7 +65,7 @@
 
       <!-- 내용 -->
       <div>
-        <label class="form-label fw-semibold" style="color:var(--ink)">내용</label>
+        <label class="form-label fw-semibold fs-5" style="color:var(--ink)">내용</label>
         <textarea
           v-model="form.content"
           class="form-control"
@@ -81,7 +81,7 @@
         <router-link to="/community" class="btn btn-outline-secondary">취소</router-link>
         <button type="submit" class="btn btn-primary px-4" :disabled="submitting">
           <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
-          {{ isEdit ? '수정 완료' : '게시하기' }}
+          {{ isEdit ? '수정 완료' : '기록 완료' }}
         </button>
       </div>
     </form>
