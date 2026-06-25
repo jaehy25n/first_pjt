@@ -36,9 +36,7 @@ copy .env.example .env             # mac·Linux: cp .env.example .env
 
 # 4) DB 준비 (db.sqlite3 는 git에 없음 → 직접 생성·적재)
 python manage.py migrate
-python manage.py loaddata interests seed embeddings   # 관심사·책·도서관·소장·임베딩
-python manage.py load_popularity                       # 인기대출 신호(LoanSignal)
-python manage.py load_seoul_libraries                  # 지도용 서울 355개 도서관
+python manage.py loaddata interests seed embeddings   # 관심사·책(2153)·도서관(355)·소장·대출신호·임베딩
 python manage.py createsuperuser                       # (선택) 관리자 계정
 
 # 5) 실행
@@ -68,13 +66,10 @@ npm run dev      # → http://localhost:5173
 
 ---
 
-## ⚠️ 데이터(fixtures) 주의 — 현재 상태
-지금 커밋된 fixtures(`fixtures/seed.json`·`embeddings.json`)는 **카탈로그 확장 전 스냅샷**입니다
-(책 **564권** · 마포 3개관). 즉 위 `loaddata`로는 *축소판*이 뜹니다.
+## 데이터(fixtures)
+커밋된 fixtures는 **현재 카탈로그 전체**입니다 — 책 **2,153권** · 서울 **355개관** · 대출/베스트셀러 신호 · 책 임베딩(2026-06-25 동결). 위 `loaddata interests seed embeddings` 한 번이면 전부 적재됩니다.
 
-전체 현재 카탈로그(**2,153권** · 서울 **355개관** · 베스트셀러 신호)로 돌리려면, 유지보수자가
-작업 DB에서 `python manage.py dumpdata …`로 fixtures를 **다시 동결해 커밋**해야 합니다(제출 직전 단계).
-`load_seoul_libraries`는 지도용 서울 355개 도서관을 fixtures와 별도로 적재합니다.
+> 데이터를 새로 수집·가공해 갱신하면(`scripts/` · `load_*` 관리명령), 작업 DB에서 `python manage.py dumpdata …`로 `seed.json`·`embeddings.json`을 다시 동결해 커밋하세요.
 
 ---
 
