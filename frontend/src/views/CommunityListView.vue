@@ -5,13 +5,24 @@
     <div class="page-header border-bottom pb-4 mb-5">
       <div class="d-flex align-items-end justify-content-between">
         <div>
-          <p class="text-muted small mb-1 fw-semibold text-uppercase letter-spacing-wide">Community</p>
-          <h1 class="h2 fw-bold mb-0" style="color:var(--ink)">책 이야기</h1>
-          <p class="text-muted mt-2 mb-0">독서 경험을 나누고, 같이 읽을 책을 찾아보세요.</p>
+          <h1 class="h2 fw-bold mt-4 mb-0" style="color:var(--ink)">책마당</h1>
+          <p class="text-muted mt-2 mb-0">독서 경험을 나누며, 함께 독서를 이어나가요.</p>
         </div>
-        <router-link v-if="accountStore.isLogin" to="/community/create" class="btn btn-primary">
-          ✏️ 글쓰기
-        </router-link>
+        <div v-if="accountStore.isLogin" class="d-flex justify-content-end align-items-center gap-2 mt-5 pt-4">
+  
+          <!-- 내 기록 -->
+          <router-link to="/community/me" class="btn btn-outline-secondary">
+            내 기록
+          </router-link>
+
+          <!-- 기록하기 -->
+          <router-link to="/community/create" class="btn btn-primary">
+            기록하기
+          </router-link>
+  
+        </div>
+    </div>
+  </div>
       </div>
 
       <!-- 탭 필터 -->
@@ -23,7 +34,7 @@
           @click="activeTab = tab.value"
         >{{ tab.label }}</button>
       </div>
-    </div>
+    
 
     <!-- 로딩 -->
     <div v-if="loading" class="text-center py-5">
@@ -32,7 +43,7 @@
 
     <!-- 게시글 없음 -->
     <div v-else-if="filteredArticles.length === 0" class="text-center py-5 text-muted">
-      <div class="mb-3" style="font-size:2.5rem">💬</div>
+      <div class="mb-3" style="font-size:2.5rem">...</div>
       <p class="mb-0">아직 글이 없어요. 첫 번째 이야기를 시작해보세요!</p>
     </div>
 
@@ -62,17 +73,12 @@
           <div class="d-flex align-items-center gap-3">
             <small class="text-muted">{{ article.username }}</small>
             <small class="text-muted">{{ formatDate(article.created_at) }}</small>
-            <small class="text-muted">💬 {{ article.comment_count }}</small>
+            <small class="text-muted">댓글 {{ article.comment_count }}</small>
           </div>
         </div>
       </article>
     </div>
 
-    <!-- 내 게시글 보기 (로그인 시) -->
-    <div v-if="accountStore.isLogin" class="mt-5 pt-4 border-top text-center">
-      <router-link to="/community/me" class="btn btn-outline-secondary btn-sm">내가 쓴 글 보기</router-link>
-    </div>
-  </div>
 </template>
 
 <script setup>
